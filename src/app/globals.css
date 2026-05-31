@@ -1,26 +1,192 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Colors */
+  --color-primary: #FF9500;
+  --color-secondary: #D90000;
+  --color-tertiary: #F2C94C;
+  --color-background: #0E0E0E;
+  --color-surface: #1C1B1B;
+  --color-surface-hover: #262525;
+  --color-surface-active: #313030;
+  --color-border-custom: #2A2A2A;
+
+  /* Typography */
+  --font-heading: var(--font-anybody), sans-serif;
+  --font-body: var(--font-hanken), sans-serif;
+  --font-mono: var(--font-jetbrains), monospace;
+
+  /* Rounded Borders */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* Spacing overrides if needed */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Base resets & custom scrollbar */
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-background);
+  color: #F2F2F2;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* Custom Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0E0E0E;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A2A2A;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF9500;
+}
+
+/* Glow Effects */
+.shadow-glow-orange {
+  box-shadow: 0 0 15px rgba(255, 149, 0, 0.15);
+}
+
+.shadow-glow-orange-lg {
+  box-shadow: 0 0 25px rgba(255, 149, 0, 0.25);
+}
+
+.shadow-glow-red {
+  box-shadow: 0 0 15px rgba(217, 0, 0, 0.15);
+}
+
+/* Smooth Interactive Glow Transition */
+.glow-interactive {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #2A2A2A;
+}
+
+.glow-interactive:hover {
+  border-color: #FF9500;
+  box-shadow: 0 0 20px rgba(255, 149, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Inner glow underlit card effect */
+.underlit-card-red {
+  position: relative;
+  overflow: hidden;
+}
+
+.underlit-card-red::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #D90000 0%, transparent 100%);
+}
+
+.underlit-card-orange {
+  position: relative;
+  overflow: hidden;
+}
+
+.underlit-card-orange::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #FF9500 0%, transparent 100%);
+}
+
+.underlit-card-gold {
+  position: relative;
+  overflow: hidden;
+}
+
+.underlit-card-gold::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #F2C94C 0%, transparent 100%);
+}
+
+/* Pulsing shadow effect */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(255, 149, 0, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(255, 149, 0, 0.35);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.pulse-glow-orange {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
+
+/* Premium Text Gradient Utility */
+.text-gradient-premium {
+  background: linear-gradient(135deg, #FF9500 0%, #FF2A00 50%, #F2C94C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Shimmering glass card effect */
+.glass-card-premium {
+  background: rgba(28, 27, 27, 0.7) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Infinite breathing glow for premium items */
+@keyframes breathingGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(255, 149, 0, 0.1), inset 0 0 5px rgba(255, 149, 0, 0.05);
+    border-color: rgba(255, 149, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 149, 0, 0.25), inset 0 0 10px rgba(255, 149, 0, 0.1);
+    border-color: rgba(255, 149, 0, 0.4);
+  }
+}
+.glow-breathing {
+  animation: breathingGlow 4s infinite ease-in-out;
+}
+
+/* Floating micro-animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.animate-float {
+  animation: float 3.5s ease-in-out infinite;
+}
+
+/* Modern gradient mesh background for main screens */
+.bg-mesh-dark {
+  background-color: #0E0E0E !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(255, 149, 0, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(217, 0, 0, 0.05) 0px, transparent 50%) !important;
 }
