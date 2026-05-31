@@ -23,6 +23,25 @@ export default function Sidebar() {
   const { language, setLanguage, t, isRtl } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [adminUsername, setAdminUsername] = useState('admin');
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'dark' | 'light';
+    if (savedTheme === 'light') {
+      setTheme('light');
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      setTheme('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+  };
 
   useEffect(() => {
     async function fetchMe() {
@@ -120,6 +139,24 @@ export default function Sidebar() {
         >
           <Globe className="h-4 w-4 text-[#F2C94C] flex-shrink-0" />
           <span>{language === 'ar' ? 'English (LTR)' : 'العربية (RTL)'}</span>
+        </button>
+
+        {/* Theme Switcher Button */}
+        <button
+          onClick={toggleTheme}
+          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-[#F2F2F2] hover:bg-[#2A2A2A] transition-all"
+        >
+          {theme === 'dark' ? (
+            <>
+              <span className="text-yellow-400 text-xs w-4 flex items-center justify-center flex-shrink-0">☀️</span>
+              <span>{language === 'ar' ? 'الوضع النهاري' : 'Light Mode'}</span>
+            </>
+          ) : (
+            <>
+              <span className="text-indigo-400 text-xs w-4 flex items-center justify-center flex-shrink-0">🌙</span>
+              <span>{language === 'ar' ? 'الوضع الليلي' : 'Dark Mode'}</span>
+            </>
+          )}
         </button>
 
         {/* Admin profile detail */}

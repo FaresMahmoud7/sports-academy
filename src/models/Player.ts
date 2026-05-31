@@ -13,6 +13,7 @@ export interface IPlayer extends Document {
   category: string;
   notes?: string;
   trainingDays: string[];
+  trainingType?: string;
 }
 
 const PlayerSchema = new Schema<IPlayer>(
@@ -71,6 +72,11 @@ const PlayerSchema = new Schema<IPlayer>(
     trainingDays: {
       type: [String],
       default: [],
+    },
+    trainingType: {
+      type: String,
+      enum: ['كاتا', 'كوميتيه', 'فتنس', 'اختبارات', 'Kata', 'Kumite', 'Fitness', 'Exams', 'غير محدد', ''],
+      default: '',
     },
   },
   { timestamps: true }

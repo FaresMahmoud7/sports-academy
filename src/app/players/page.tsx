@@ -37,6 +37,7 @@ interface PlayerData {
   category: string;
   notes?: string;
   trainingDays: string[];
+  trainingType?: string;
 }
 
 const DAYS_OF_WEEK = [
@@ -64,6 +65,7 @@ export default function Players() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [coachFilter, setCoachFilter] = useState('');
   const [regFilter, setRegFilter] = useState('');
+  const [trainingTypeFilter, setTrainingTypeFilter] = useState('');
 
   // Modals state
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -85,6 +87,7 @@ export default function Players() {
     coachId: '',
     notes: '',
     trainingDays: [] as string[],
+    trainingType: '',
   });
 
   // Fetch players and coaches
@@ -97,6 +100,7 @@ export default function Players() {
         category: categoryFilter,
         coachId: coachFilter,
         registered: regFilter,
+        trainingType: trainingTypeFilter,
       });
 
       const res = await fetch(`/api/players?${query.toString()}`);
@@ -125,7 +129,7 @@ export default function Players() {
   useEffect(() => {
     fetchPlayers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, beltFilter, categoryFilter, coachFilter, regFilter]);
+  }, [search, beltFilter, categoryFilter, coachFilter, regFilter, trainingTypeFilter]);
 
   useEffect(() => {
     fetchCoaches();
@@ -143,6 +147,7 @@ export default function Players() {
       coachId: '',
       notes: '',
       trainingDays: [],
+      trainingType: '',
     });
     setIsAddOpen(true);
   };
@@ -159,6 +164,7 @@ export default function Players() {
       coachId: player.coachId?._id || '',
       notes: player.notes || '',
       trainingDays: player.trainingDays || [],
+      trainingType: player.trainingType || '',
     });
     setIsEditOpen(true);
   };
@@ -296,7 +302,7 @@ export default function Players() {
         </div>
 
         {/* Filters Card */}
-        <div className="bg-[#1C1B1B] border border-[#2A2A2A] rounded p-4 mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="bg-[#1C1B1B] border border-[#2A2A2A] rounded p-4 mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
           {/* Search input */}
           <div className="relative">
             <span className={`absolute inset-y-0 ${isRtl ? 'left-3' : 'right-3'} flex items-center text-[#828282]`}>
@@ -355,6 +361,19 @@ export default function Players() {
             ))}
           </select>
 
+          {/* Training Type filter */}
+          <select
+            value={trainingTypeFilter}
+            onChange={(e) => setTrainingTypeFilter(e.target.value)}
+            className="bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"
+          >
+            <option value="">كل التمارين</option>
+            <option value="كاتا">كاتا (Kata)</option>
+            <option value="كوميتيه">كوميتيه (Kumite)</option>
+            <option value="فتنس">فتنس (Fitness)</option>
+            <option value="اختبارات">اختبارات (Exams)</option>
+          </select>
+
           {/* Registration filter */}
           <select
             value={regFilter}
@@ -391,6 +410,7 @@ export default function Players() {
                     <th className="p-4 font-bold">{t('birthYear')}</th>
                     <th className="p-4 font-bold">{t('age')}</th>
                     <th className="p-4 font-bold">{t('beltLevel')}</th>
+                    <th className="p-4 font-bold">{t('trainingType')}</th>
                     <th className="p-4 font-bold">{t('parentPhone')}</th>
                     <th className="p-4 font-bold">{t('registeredStatus')}</th>
                     <th className="p-4 font-bold">{t('assignedCoach')}</th>
@@ -416,6 +436,15 @@ export default function Players() {
                             ? ` - دان ${player.danDegree}`
                             : ''}
                         </span>
+                      </td>
+                      <td className="p-4">
+                        {player.trainingType ? (
+                          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-[#FF9500]/10 border border-[#FF9500]/20 text-[#FF9500]">
+                            {player.trainingType}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-[#828282] font-mono">—</span>
+                        )}
                       </td>
                       <td className="p-4 font-mono text-xs">{player.parentPhone}</td>
                       <td className="p-4">
@@ -488,6 +517,12 @@ export default function Players() {
                       </p>
                       <p>
                         الفئة: <span className="text-[#FF9500] font-bold">{player.category}</span>
+                      </p>
+                      <p>
+                        نوع التمرين:{' '}
+                        <span className="text-emerald-400 font-bold">
+                          {player.trainingType || 'غير محدد'}
+                        </span>
                       </p>
                       <p>
                         المدرب:{' '}
@@ -649,7 +684,7 @@ export default function Players() {
               </div>
 
               {/* Assign Coach & Training status */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-[10px] font-mono uppercase tracking-wider text-[#828282] mb-1 font-bold">
                     {t('assignedCoach')}
@@ -665,6 +700,23 @@ export default function Players() {
                         {c.name}
                       </option>
                     ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-[#828282] mb-1 font-bold">
+                    {t('trainingType')}
+                  </label>
+                  <select
+                    value={formData.trainingType || ''}
+                    onChange={(e) => setFormData({ ...formData, trainingType: e.target.value })}
+                    className="w-full bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"
+                  >
+                    <option value="">غير محدد</option>
+                    <option value="كاتا">كاتا (Kata)</option>
+                    <option value="كوميتيه">كوميتيه (Kumite)</option>
+                    <option value="فتنس">فتنس (Fitness)</option>
+                    <option value="اختبارات">اختبارات (Exams)</option>
                   </select>
                 </div>
 
@@ -832,11 +884,10 @@ export default function Players() {
                 </div>
                 <div>
                   <span className="text-[#828282] block text-[9px] uppercase tracking-wider">
-                    هاتف ولي الأمر
+                    نوع التمرين
                   </span>
-                  <span className="text-white flex items-center gap-1">
-                    <Phone className="h-3 w-3 text-[#F2C94C]" />
-                    <span>{selectedPlayer.parentPhone}</span>
+                  <span className="text-emerald-400 font-bold">
+                    {selectedPlayer.trainingType || 'غير محدد'}
                   </span>
                 </div>
                 <div>
@@ -847,6 +898,15 @@ export default function Players() {
                     className={selectedPlayer.registered ? 'text-emerald-400' : 'text-red-400'}
                   >
                     {selectedPlayer.registered ? 'نشط / مسجل' : 'غير مسجل'}
+                  </span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-[#828282] block text-[9px] uppercase tracking-wider">
+                    هاتف ولي الأمر
+                  </span>
+                  <span className="text-white flex items-center gap-1">
+                    <Phone className="h-3 w-3 text-[#F2C94C]" />
+                    <span>{selectedPlayer.parentPhone}</span>
                   </span>
                 </div>
               </div>

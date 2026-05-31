@@ -58,6 +58,7 @@ export async function PUT(
       coachId,
       notes,
       trainingDays,
+      trainingType,
     } = body;
 
     // Use findOneAndUpdate to trigger the pre-update hooks for age/category calculation
@@ -73,6 +74,7 @@ export async function PUT(
         coachId: coachId && coachId !== 'null' ? coachId : null,
         notes,
         trainingDays: Array.isArray(trainingDays) ? trainingDays : [],
+        trainingType: trainingType || '',
       },
       { new: true, runValidators: true }
     );

@@ -19,6 +19,7 @@ export async function GET(request: Request) {
     const category = searchParams.get('category') || '';
     const coachId = searchParams.get('coachId') || '';
     const registered = searchParams.get('registered') || '';
+    const trainingType = searchParams.get('trainingType') || '';
 
     const filterQuery: any = {};
 
@@ -36,6 +37,9 @@ export async function GET(request: Request) {
     }
     if (registered) {
       filterQuery.registered = registered === 'true';
+    }
+    if (trainingType) {
+      filterQuery.trainingType = trainingType;
     }
 
     const players = await Player.find(filterQuery)
@@ -68,6 +72,7 @@ export async function POST(request: Request) {
       coachId,
       notes,
       trainingDays,
+      trainingType,
     } = body;
 
     if (!name || !birthYear || !parentPhone) {
@@ -87,6 +92,7 @@ export async function POST(request: Request) {
       coachId: coachId && coachId !== 'null' ? coachId : null,
       notes,
       trainingDays: Array.isArray(trainingDays) ? trainingDays : [],
+      trainingType: trainingType || '',
     });
 
     await newPlayer.save();

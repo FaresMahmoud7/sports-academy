@@ -13,6 +13,7 @@ interface RawImportRow {
   parentPhone?: string;
   registered?: any;
   coachName?: string;
+  trainingType?: string;
 }
 
 export async function POST(request: Request) {
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
         const rawBirthYear = parseInt(row.birthYear, 10);
         const parentPhone = row.parentPhone?.trim() || '';
         let belt = (row.belt?.trim() || 'White') as any;
+        const trainingType = row.trainingType?.trim() || '';
         
         // Normalize belt spelling if possible
         const foundBelt = BELTS.find(
@@ -114,6 +116,7 @@ export async function POST(request: Request) {
           category,
           errors,
           isDuplicate,
+          trainingType,
         });
       }
 
@@ -130,7 +133,7 @@ export async function POST(request: Request) {
 
       for (const row of players) {
         try {
-          const { name, birthYear, belt, parentPhone, registered, coachId, notes, trainingDays } = row;
+          const { name, birthYear, belt, parentPhone, registered, coachId, notes, trainingDays, trainingType } = row;
 
           // Double check database duplicates to avoid races
           const existing = await Player.findOne({
@@ -152,6 +155,7 @@ export async function POST(request: Request) {
             coachId: coachId && mongoose.Types.ObjectId.isValid(coachId) ? coachId : null,
             notes: notes || '',
             trainingDays: Array.isArray(trainingDays) ? trainingDays : [],
+            trainingType: trainingType || '',
           });
 
           await newPlayer.save();

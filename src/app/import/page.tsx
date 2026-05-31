@@ -26,6 +26,7 @@ interface ValidatedPlayer {
   category?: string;
   errors: string[];
   isDuplicate: boolean;
+  trainingType?: string;
 }
 
 export default function ImportPlayers() {
@@ -115,6 +116,30 @@ export default function ImportPlayers() {
           }
         }
 
+        // 1. Extract Training Type from file name
+        const lowerFileName = file.name.toLowerCase();
+        let extractedType = '';
+        if (lowerFileName.includes('كاتا') || lowerFileName.includes('kata')) {
+          extractedType = 'كاتا';
+        } else if (lowerFileName.includes('كوميتيه') || lowerFileName.includes('kumite')) {
+          extractedType = 'كوميتيه';
+        } else if (lowerFileName.includes('فتنس') || lowerFileName.includes('fitness')) {
+          extractedType = 'فتنس';
+        } else if (lowerFileName.includes('اختبارات') || lowerFileName.includes('exam')) {
+          extractedType = 'اختبارات';
+        }
+
+        // 2. Automatically select Coach if coach name is in file name
+        const cleanFileName = file.name.replace(/\.[^/.]+$/, ""); // remove extension
+        const matchedCoach = coaches.find(
+          (c) =>
+            cleanFileName.includes(c.name) ||
+            c.name.split(' ').some((part) => part.length > 2 && cleanFileName.includes(part))
+        );
+        if (matchedCoach) {
+          setSelectedCoachId(matchedCoach._id);
+        }
+
         const parsedRows = json.slice(startIndex).map((row) => {
           return {
             name: String(row[0] || '').trim(),
@@ -122,6 +147,7 @@ export default function ImportPlayers() {
             belt: String(row[2] || 'White').trim(),
             parentPhone: String(row[3] || '').trim(),
             registered: String(row[4] || '').trim(),
+            trainingType: extractedType,
           };
         }).filter(r => r.name !== '');
 
@@ -181,6 +207,7 @@ export default function ImportPlayers() {
             belt: cols[2]?.trim() || 'White',
             parentPhone: cols[3]?.trim() || '',
             registered: cols[4]?.trim() || '',
+            trainingType: '',
           };
         })
         .filter((r) => r !== null && r.name !== '');
@@ -237,6 +264,7 @@ export default function ImportPlayers() {
         parentPhone: r.parentPhone,
         registered: r.registered,
         coachId: selectedCoachId || null,
+        trainingType: r.trainingType || '',
       }));
 
       const res = await fetch('/api/import', {
@@ -434,6 +462,7 @@ export default function ImportPlayers() {
                     <th className="p-3 font-bold">الاسم الكامل</th>
                     <th className="p-3 font-bold">سنة الميلاد</th>
                     <th className="p-3 font-bold">مستوى الحزام</th>
+                    <th className="p-3 font-bold">نوع التمرين</th>
                     <th className="p-3 font-bold">هاتف ولي الأمر</th>
                     <th className="p-3 font-bold text-center">مسجل</th>
                     <th className="p-3 font-bold text-center">الحالة / أخطاء التحقق</th>
@@ -484,6 +513,21 @@ export default function ImportPlayers() {
                                 {b}
                               </option>
                             ))}
+                          </select>
+                        </td>
+
+                        {/* Training Type dropdown */}
+                        <td className="p-2">
+                          <select
+                            value={row.trainingType || ''}
+                            onChange={(e) => handleCellEdit(index, 'trainingType', e.target.value)}
+                            className="bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-2 py-1 text-[#F2F2F2] focus:border-[#FF9500] focus:outline-none"
+                          >
+                            <option value="">غير محدد</option>
+                            <option value="كاتا">كاتا (Kata)</option>
+                            <option value="كوميتيه">كوميتيه (Kumite)</option>
+                            <option value="فتنس">فتنس (Fitness)</option>
+                            <option value="اختبارات">اختبارات (Exams)</option>
                           </select>
                         </td>
 
