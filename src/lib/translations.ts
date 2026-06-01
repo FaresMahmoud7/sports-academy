@@ -1,6 +1,6 @@
 export const translations = {
   ar: {
-    title: 'أكاديمية الأبطال - نادي فينيكس',
+    title: 'أكاديمية الأبطال | مصنع الأبطال',
     subtitle: 'نظام إدارة أكاديمية الكاراتيه',
     dashboard: 'لوحة التحكم',
     players: 'إدارة اللاعبين',
@@ -8,6 +8,7 @@ export const translations = {
     categories: 'الفئات العمرية',
     import: 'استيراد اللاعبين',
     settings: 'الإعدادات',
+    academyManagement: 'إدارة الموقع',
     logout: 'تسجيل الخروج',
     welcome: 'مرحباً بك يا دولي',
     admin: 'المدير المسؤول',
@@ -122,7 +123,7 @@ export const translations = {
     updateError: 'حدث خطأ أثناء تحديث الإعدادات',
   },
   en: {
-    title: 'Champions Academy - Phoenix Club',
+    title: 'Champions Academy | Factory of Champions',
     subtitle: 'Karate Academy Management System',
     dashboard: 'Dashboard',
     players: 'Players Management',
@@ -130,6 +131,7 @@ export const translations = {
     categories: 'Age Categories',
     import: 'Import Players',
     settings: 'Settings',
+    academyManagement: 'Website Management',
     logout: 'Logout',
     welcome: 'Welcome, Champion',
     admin: 'System Admin',

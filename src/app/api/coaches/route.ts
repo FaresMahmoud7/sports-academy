@@ -5,11 +5,6 @@ import { verifyAuth } from '@/lib/auth';
 
 export async function GET() {
   try {
-    const admin = await verifyAuth();
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     await dbConnect();
     const coaches = await Coach.find({})
       .populate({

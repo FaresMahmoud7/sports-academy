@@ -6,6 +6,12 @@ export interface ICoach extends Document {
   trainingDays: string[];
   trainingTime: string;
   players: mongoose.Types.ObjectId[];
+  photoUrl?: string;
+  position?: string;
+  experience?: string;
+  biography?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
 }
 
 const CoachSchema = new Schema<ICoach>(
@@ -35,6 +41,30 @@ const CoachSchema = new Schema<ICoach>(
         ref: 'Player',
       },
     ],
+    photoUrl: {
+      type: String,
+      default: '',
+    },
+    position: {
+      type: String,
+      default: '',
+    },
+    experience: {
+      type: String,
+      default: '',
+    },
+    biography: {
+      type: String,
+      default: '',
+    },
+    facebookUrl: {
+      type: String,
+      default: '',
+    },
+    instagramUrl: {
+      type: String,
+      default: '',
+    },
   },
   { timestamps: true }
 );

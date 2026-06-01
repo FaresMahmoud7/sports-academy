@@ -66,6 +66,7 @@ export default function Sidebar() {
     { name: t('coaches'), path: '/coaches', icon: Trophy },
     { name: t('categories'), path: '/categories', icon: Calendar },
     { name: t('import'), path: '/import', icon: Upload },
+    { name: t('academyManagement'), path: '/dashboard/academy', icon: Globe },
     { name: t('settings'), path: '/settings', icon: Settings },
   ];
 

@@ -29,6 +29,14 @@ export async function PUT(
     coach.phone = phone ?? coach.phone;
     coach.trainingDays = Array.isArray(trainingDays) ? trainingDays : coach.trainingDays;
     coach.trainingTime = trainingTime ?? coach.trainingTime;
+    
+    // Extended fields for About Academy page
+    if (body.photoUrl !== undefined) coach.photoUrl = body.photoUrl;
+    if (body.position !== undefined) coach.position = body.position;
+    if (body.experience !== undefined) coach.experience = body.experience;
+    if (body.biography !== undefined) coach.biography = body.biography;
+    if (body.facebookUrl !== undefined) coach.facebookUrl = body.facebookUrl;
+    if (body.instagramUrl !== undefined) coach.instagramUrl = body.instagramUrl;
 
     if (Array.isArray(players)) {
       // 1. Set coachId to null for players previously assigned to this coach
