@@ -31,6 +31,11 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'أكاديمية الأبطال | Champions Academy',
   description: 'نظام إدارة أكاديمية الكاراتيه - لوحة التحكم للمدير الرياضي',
+  icons: {
+    icon: '/logo.jpg',
+    apple: '/logo.jpg',
+    shortcut: '/logo.jpg',
+  },
 };
 
 export default function RootLayout({
