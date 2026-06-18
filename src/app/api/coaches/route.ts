@@ -31,9 +31,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, phone, trainingDays, trainingTime } = body;
 
-    if (!name || !phone || !trainingTime) {
+    if (!name) {
       return NextResponse.json(
-        { error: 'Coach name, phone, and training time are required' },
+        { error: 'Coach name is required' },
         { status: 400 }
       );
     }
