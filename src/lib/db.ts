@@ -10,11 +10,13 @@ try {
   console.warn('DNS override failed:', err);
 }
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
-}
+const getMongoUri = () => {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error('Please define the MONGODB_URI environment variable');
+  }
+  return uri;
+};
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
@@ -38,7 +40,7 @@ async function dbConnect() {
       serverSelectionTimeoutMS: 3000, // Fail fast in 3 seconds instead of 30s
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongooseInstance) => {
+    cached.promise = mongoose.connect(getMongoUri(), opts).then((mongooseInstance) => {
       return mongooseInstance;
     });
   }
