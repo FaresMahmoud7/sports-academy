@@ -16,14 +16,14 @@ export function proxy(request: NextRequest) {
 
   if (isProtectedPath) {
     if (!token) {
-      // Redirect to login if not logged in
-      const loginUrl = new URL('/login', request.url);
+      // Redirect to landing page with login query parameter
+      const loginUrl = new URL('/?login=true', request.url);
       return NextResponse.redirect(loginUrl);
     }
   }
 
-  // Redirect logged-in admin away from login page
-  if (pathname === '/login' || pathname === '/') {
+  // Redirect logged-in admin away from login page if they attempt to access it
+  if (pathname === '/login') {
     if (token) {
       const dashboardUrl = new URL('/dashboard', request.url);
       return NextResponse.redirect(dashboardUrl);

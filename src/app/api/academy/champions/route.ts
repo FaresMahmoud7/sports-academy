@@ -32,9 +32,9 @@ export async function POST(request: Request) {
     const champion = await Champion.create({
       name,
       photoUrl: photoUrl || '/logo.jpg',
-      ageCategory: ageCategory || 'أشبال (تحت 12 سنة)',
-      sportCategory: sportCategory || 'كاتا فردي',
-      achievements: achievements || 'بطل الجمهورية والميدالية الذهبية 2026',
+      ageCategory: ageCategory || '',
+      sportCategory: sportCategory || '',
+      achievements: achievements || '',
       socialLinks: socialLinks || { facebook: '', instagram: '' },
     });
 

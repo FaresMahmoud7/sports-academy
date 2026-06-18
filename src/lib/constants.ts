@@ -1,15 +1,10 @@
 export const BELTS = [
   'White',
-  'Yellow 1',
-  'Yellow 2',
-  'Yellow 3',
-  'Orange 1',
-  'Orange 2',
-  'Orange 3',
-  'Green 1',
-  'Blue 1',
-  'Brown 1',
-  'Brown 2',
+  'Yellow',
+  'Orange',
+  'Green',
+  'Blue',
+  'Brown',
   'Black Belt',
 ] as const;
 

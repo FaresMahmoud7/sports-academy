@@ -18,13 +18,26 @@ import {
   Plus,
   Save,
   Shield,
-  Facebook,
-  Instagram,
   FileText,
   UserCheck,
   CheckCircle,
   XCircle,
 } from 'lucide-react';
+
+const Facebook = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+  </svg>
+);
+
+const Instagram = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+  </svg>
+);
+
 
 interface Champion {
   _id?: string;
@@ -79,6 +92,7 @@ interface AcademyContent {
     mission: string;
     story: string;
     imageUrl: string;
+    imageFit?: 'cover' | 'contain';
   };
   whyChooseUs: {
     icon: string;
@@ -111,7 +125,7 @@ export default function AcademyManagement() {
   // Core content state
   const [content, setContent] = useState<AcademyContent>({
     hero: { title: '', subtitle: '', ctaText: '', ctaLink: '', mediaUrl: '' },
-    about: { introduction: '', vision: '', mission: '', story: '', imageUrl: '' },
+    about: { introduction: '', vision: '', mission: '', story: '', imageUrl: '/ابطالنا/احمد سالم.jpeg', imageFit: 'contain' as 'cover' | 'contain' },
     whyChooseUs: [],
     statistics: { championsCount: 0, tournamentsCount: 0, yearsOfExperience: 0, traineesCount: 0 },
     contact: { address: '', phone: '', email: '', googleMapUrl: '' },
@@ -250,7 +264,7 @@ export default function AcademyManagement() {
     } else {
       setChampionModal({
         open: true,
-        form: { name: '', photoUrl: '/logo.jpg', ageCategory: 'أشبال (تحت 12 سنة)', sportCategory: 'كاتا فردي', achievements: '', socialLinks: { facebook: '', instagram: '' } },
+        form: { name: '', photoUrl: '/logo.jpg', ageCategory: '', sportCategory: '', achievements: '', socialLinks: { facebook: '', instagram: '' } },
       });
     }
   };
@@ -279,7 +293,7 @@ export default function AcademyManagement() {
         setChampions([savedChamp, ...champions]);
         showToast(language === 'ar' ? 'تم إضافة البطل بنجاح' : 'Champion created successfully', 'success');
       }
-      setChampionModal({ open: false, form: { name: '', photoUrl: '', ageCategory: '', sportCategory: '', achievements: '' } });
+      setChampionModal({ open: false, form: { name: '', photoUrl: '', ageCategory: '', sportCategory: '', achievements: '', socialLinks: { facebook: '', instagram: '' } } });
     } catch (err: any) {
       showToast(err.message || 'Error saving champion', 'error');
     } finally {
@@ -481,8 +495,8 @@ export default function AcademyManagement() {
     { id: 'why_stats_contact', name: language === 'ar' ? 'المميزات والتواصل' : 'Why Us & Contact', icon: Shield },
     { id: 'champions', name: language === 'ar' ? 'إدارة الأبطال' : 'Our Champions', icon: Trophy },
     { id: 'coaches', name: language === 'ar' ? 'الملفات التعريفية للمدربين' : 'Coaches Profiles', icon: UserCheck },
-    { id: 'testimonials', name: language === 'ar' ? 'آراء أولياء الأمور' : 'Testimonials', icon: Star },
-    { id: 'gallery', name: language === 'ar' ? 'معرض الصور' : 'Gallery', icon: ImageIcon },
+
+    { id: 'gallery', name: language === 'ar' ? 'إنجازاتنا' : 'Achievements', icon: ImageIcon },
   ] as const;
 
   return (
@@ -630,6 +644,18 @@ export default function AcademyManagement() {
                 </div>
 
                 <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'طريقة عرض الصورة' : 'Image Fit Style'}</label>
+                  <select
+                    value={content.about.imageFit || 'contain'}
+                    onChange={(e) => setContent({ ...content, about: { ...content.about, imageFit: e.target.value as 'cover' | 'contain' } })}
+                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
+                  >
+                    <option value="cover">تغطية الإطار بالكامل (Cover)</option>
+                    <option value="contain">احتواء داخل الإطار بدون قص (Contain)</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-2">
                   <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'المقدمة التعريفية (مع دعم النصوص الغنية)' : 'Academy Introduction'}</label>
                   <textarea
                     rows={4}
@@ -767,59 +793,7 @@ export default function AcademyManagement() {
               </div>
             </div>
 
-            {/* Achievements & Statistics */}
-            <div className="glass-card-premium rounded-xl border border-[#2A2A2A] p-6 shadow-glow-orange">
-              <h2 className="text-lg md:text-xl font-heading font-black text-[#FF9500] border-b border-[#2A2A2A] pb-3 mb-6 uppercase flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-[#F2C94C]" />
-                {language === 'ar' ? 'أرقام وإحصائيات الأكاديمية (Animated Counters)' : 'Academy Statistics (Counters)'}
-              </h2>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'عدد الأبطال' : 'Number of Champions'}</label>
-                  <input
-                    type="number"
-                    value={content.statistics.championsCount}
-                    onChange={(e) => setContent({ ...content, statistics: { ...content.statistics, championsCount: Number(e.target.value) } })}
-                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'البطولات التي فزنا بها' : 'Tournaments Won'}</label>
-                  <input
-                    type="number"
-                    value={content.statistics.tournamentsCount}
-                    onChange={(e) => setContent({ ...content, statistics: { ...content.statistics, tournamentsCount: Number(e.target.value) } })}
-                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'سنوات الخبرة الرياضية' : 'Years of Experience'}</label>
-                  <input
-                    type="number"
-                    value={content.statistics.yearsOfExperience}
-                    onChange={(e) => setContent({ ...content, statistics: { ...content.statistics, yearsOfExperience: Number(e.target.value) } })}
-                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'عدد المتدربين النشطين' : 'Number of Trainees'}</label>
-                  <input
-                    type="number"
-                    value={content.statistics.traineesCount}
-                    onChange={(e) => setContent({ ...content, statistics: { ...content.statistics, traineesCount: Number(e.target.value) } })}
-                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
 
             {/* Contact details */}
             <div className="glass-card-premium rounded-xl border border-[#2A2A2A] p-6 shadow-glow-orange">
@@ -923,9 +897,6 @@ export default function AcademyManagement() {
                   <thead>
                     <tr className="bg-[#0E0E0E] text-[#828282] text-xs font-mono uppercase border-b border-[#2A2A2A]">
                       <th className="p-4">{language === 'ar' ? 'البطل' : 'Champion'}</th>
-                      <th className="p-4">{language === 'ar' ? 'الفئة العمرية' : 'Age Category'}</th>
-                      <th className="p-4">{language === 'ar' ? 'نوع الرياضة / الفئة' : 'Sport Category'}</th>
-                      <th className="p-4">{language === 'ar' ? 'الإنجازات' : 'Achievements'}</th>
                       <th className="p-4 text-center">{language === 'ar' ? 'إجراءات' : 'Actions'}</th>
                     </tr>
                   </thead>
@@ -941,9 +912,6 @@ export default function AcademyManagement() {
                             <span className="font-bold">{champ.name}</span>
                           </div>
                         </td>
-                        <td className="p-4">{champ.ageCategory}</td>
-                        <td className="p-4 font-semibold text-[#FF9500]">{champ.sportCategory}</td>
-                        <td className="p-4 text-xs text-[#828282] max-w-xs truncate">{champ.achievements}</td>
                         <td className="p-4">
                           <div className="flex items-center justify-center gap-2">
                             <button
@@ -1054,7 +1022,7 @@ export default function AcademyManagement() {
           <div className="space-y-6 animate-float">
             <div className="flex justify-between items-center bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl p-4">
               <div>
-                <h3 className="font-heading font-black text-[#FF9500] uppercase text-sm tracking-wider">{language === 'ar' ? 'معرض صور الفعاليات والتدريبات والبطولات' : 'Academy Photo Gallery'}</h3>
+                <h3 className="font-heading font-black text-[#FF9500] uppercase text-sm tracking-wider">{language === 'ar' ? 'إنجازات وبطولات الأكاديمية' : 'Academy Achievements'}</h3>
                 <span className="font-mono text-xs text-[#828282]">{gallery.length} {language === 'ar' ? 'صورة مرفوعة' : 'images uploaded'}</span>
               </div>
               <button
@@ -1071,7 +1039,7 @@ export default function AcademyManagement() {
               {gallery.map((item) => (
                 <div key={item._id} className="group relative aspect-square bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl overflow-hidden hover:border-[#FF9500] transition-all duration-300 shadow-md">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.imageUrl} alt={item.caption} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={item.imageUrl} alt={item.caption} className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500" />
                   
                   {/* Bottom overlay with text & delete */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -1207,38 +1175,7 @@ export default function AcademyManagement() {
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'الفئة العمرية (أشبال / ناشئين / شباب)' : 'Age Category'}</label>
-                  <input
-                    type="text"
-                    value={championModal.form.ageCategory}
-                    onChange={(e) => setChampionModal({ ...championModal, form: { ...championModal.form, ageCategory: e.target.value } })}
-                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    required
-                  />
-                </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'الفئة القتالية (مثال: كاتا فردي)' : 'Sport Category'}</label>
-                  <input
-                    type="text"
-                    value={championModal.form.sportCategory}
-                    onChange={(e) => setChampionModal({ ...championModal, form: { ...championModal.form, sportCategory: e.target.value } })}
-                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'الإنجازات الرياضية والبطولات' : 'Sport Achievements'}</label>
-                  <textarea
-                    rows={3}
-                    value={championModal.form.achievements}
-                    onChange={(e) => setChampionModal({ ...championModal, form: { ...championModal.form, achievements: e.target.value } })}
-                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none focus:border-[#FF9500] text-xs"
-                    required
-                  />
-                </div>
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'رابط فيسبوك (اختياري)' : 'Facebook Profile URL'}</label>

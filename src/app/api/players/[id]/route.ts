@@ -59,6 +59,9 @@ export async function PUT(
       notes,
       trainingDays,
       trainingType,
+      fileNumber,
+      nationalId,
+      beltDate,
     } = body;
 
     // Use findOneAndUpdate to trigger the pre-update hooks for age/category calculation
@@ -75,6 +78,9 @@ export async function PUT(
         notes,
         trainingDays: Array.isArray(trainingDays) ? trainingDays : [],
         trainingType: trainingType || '',
+        fileNumber: fileNumber || '',
+        nationalId: nationalId || '',
+        beltDate: beltDate || '',
       },
       { new: true, runValidators: true }
     );

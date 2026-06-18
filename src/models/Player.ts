@@ -14,6 +14,9 @@ export interface IPlayer extends Document {
   notes?: string;
   trainingDays: string[];
   trainingType?: string;
+  fileNumber?: string;
+  nationalId?: string;
+  beltDate?: string;
 }
 
 const PlayerSchema = new Schema<IPlayer>(
@@ -40,13 +43,6 @@ const PlayerSchema = new Schema<IPlayer>(
       type: Number,
       min: 1,
       max: 10,
-      validate: {
-        validator: function (this: any, val: number) {
-          // If belt is Black Belt, danDegree should be present (though optional, it must be between 1-10)
-          return !val || this.belt === 'Black Belt';
-        },
-        message: 'Dan degree is only applicable for Black Belt rank.',
-      },
     },
     parentPhone: {
       type: String,
@@ -76,6 +72,21 @@ const PlayerSchema = new Schema<IPlayer>(
     trainingType: {
       type: String,
       enum: ['كاتا', 'كوميتيه', 'فتنس', 'اختبارات', 'Kata', 'Kumite', 'Fitness', 'Exams', 'غير محدد', ''],
+      default: '',
+    },
+    fileNumber: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    nationalId: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    beltDate: {
+      type: String,
+      trim: true,
       default: '',
     },
   },

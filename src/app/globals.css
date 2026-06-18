@@ -12,8 +12,8 @@
   --color-border-custom: #2A2A2A;
 
   /* Typography */
-  --font-heading: var(--font-anybody), sans-serif;
-  --font-body: var(--font-hanken), sans-serif;
+  --font-heading: var(--font-cairo), var(--font-anybody), sans-serif;
+  --font-body: var(--font-cairo), var(--font-hanken), sans-serif;
   --font-mono: var(--font-jetbrains), monospace;
 
   /* Rounded Borders */
@@ -26,6 +26,11 @@
 }
 
 /* Base resets & custom scrollbar */
+html {
+  scroll-padding-top: 5rem;
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-body);
   background-color: var(--color-background);
@@ -296,3 +301,24 @@ h1, h2, h3, h4, h5, h6 {
   border-color: #E2E8F0 !important;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
 }
+
+/* Improve Arabic readability by enlarging small text classes globally */
+.text-\[9px\] {
+  font-size: 0.7rem !important; /* ~11.2px */
+}
+.text-\[10px\] {
+  font-size: 0.775rem !important; /* ~12.4px */
+}
+.text-\[11px\] {
+  font-size: 0.825rem !important; /* ~13.2px */
+}
+.text-xs {
+  font-size: 0.875rem !important; /* 14px */
+}
+.text-sm {
+  font-size: 0.975rem !important; /* 15.6px */
+}
+.text-base {
+  font-size: 1.075rem !important; /* 17.2px */
+}
+

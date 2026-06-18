@@ -9,7 +9,7 @@ export async function GET() {
     const coaches = await Coach.find({})
       .populate({
         path: 'players',
-        select: 'name birthYear age belt registered parentPhone',
+        select: 'name birthYear age belt registered parentPhone fileNumber',
       })
       .sort({ name: 1 });
 

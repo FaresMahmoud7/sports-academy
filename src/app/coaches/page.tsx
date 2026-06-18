@@ -23,6 +23,7 @@ interface PlayerData {
   _id: string;
   name: string;
   belt: string;
+  fileNumber?: string;
 }
 
 interface CoachData {
@@ -53,6 +54,7 @@ export default function Coaches() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [playerSearch, setPlayerSearch] = useState('');
 
   // UI state
   const [expandedCoaches, setExpandedCoaches] = useState<Record<string, boolean>>({});
@@ -116,6 +118,7 @@ export default function Coaches() {
       trainingDays: [],
       players: [],
     });
+    setPlayerSearch('');
     setIsAddOpen(true);
   };
 
@@ -128,6 +131,7 @@ export default function Coaches() {
       trainingDays: coach.trainingDays || [],
       players: coach.players ? coach.players.map((p) => p._id) : [],
     });
+    setPlayerSearch('');
     setIsEditOpen(true);
   };
 
@@ -440,7 +444,7 @@ export default function Coaches() {
                 </label>
                 <input
                   type="text"
-                  required
+                  required={isAddOpen}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"
@@ -456,7 +460,7 @@ export default function Coaches() {
                   </label>
                   <input
                     type="text"
-                    required
+                    required={isAddOpen}
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"
@@ -469,7 +473,7 @@ export default function Coaches() {
                   </label>
                   <input
                     type="text"
-                    required
+                    required={isAddOpen}
                     value={formData.trainingTime}
                     onChange={(e) => setFormData({ ...formData, trainingTime: e.target.value })}
                     className="w-full bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"
@@ -511,11 +515,22 @@ export default function Coaches() {
                   <span className="text-[9px] text-zinc-500 font-normal">اختر اللاعبين ليتم ربطهم تلقائياً</span>
                 </label>
 
+                <div className="mb-2 relative">
+                  <input
+                    type="text"
+                    placeholder="ابحث باسم اللاعب أو رقم الملف..."
+                    value={playerSearch}
+                    onChange={(e) => setPlayerSearch(e.target.value)}
+                    className="w-full bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500] pr-8"
+                  />
+                  <Search className="h-3.5 w-3.5 text-[#828282] absolute top-1/2 -translate-y-1/2 right-3" />
+                </div>
+
                 <div className="border border-[#2A2A2A] bg-[#0E0E0E] rounded p-3 max-h-40 overflow-y-auto space-y-1">
-                  {allPlayers.length === 0 ? (
-                    <p className="text-[10px] text-zinc-600 text-center py-2">لا يوجد لاعبون مضافون بعد</p>
+                  {allPlayers.filter(p => p.name.includes(playerSearch) || (p.fileNumber && p.fileNumber.includes(playerSearch))).length === 0 ? (
+                    <p className="text-[10px] text-zinc-600 text-center py-2">لا يوجد لاعبون مطابقون</p>
                   ) : (
-                    allPlayers.map((player) => {
+                    allPlayers.filter(p => p.name.includes(playerSearch) || (p.fileNumber && p.fileNumber.includes(playerSearch))).map((player) => {
                       const isSelected = formData.players.includes(player._id);
                       return (
                         <button
@@ -528,7 +543,12 @@ export default function Coaches() {
                               : 'bg-transparent border border-transparent text-[#F2F2F2] hover:bg-[#1C1B1B]'
                           }`}
                         >
-                          <span className="font-semibold">{player.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{player.name}</span>
+                            {player.fileNumber && (
+                              <span className="text-[9px] text-[#828282] font-mono">#{player.fileNumber}</span>
+                            )}
+                          </div>
                           <span className="text-[9px] font-mono bg-zinc-800 text-zinc-400 px-1 py-0.5 rounded">
                             {t(player.belt as any)}
                           </span>

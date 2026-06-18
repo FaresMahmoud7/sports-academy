@@ -8,8 +8,6 @@ import {
   LayoutDashboard,
   Users,
   Trophy,
-  Calendar,
-  Upload,
   Settings,
   LogOut,
   Menu,
@@ -64,9 +62,8 @@ export default function Sidebar() {
     { name: t('dashboard'), path: '/dashboard', icon: LayoutDashboard },
     { name: t('players'), path: '/players', icon: Users },
     { name: t('coaches'), path: '/coaches', icon: Trophy },
-    { name: t('categories'), path: '/categories', icon: Calendar },
-    { name: t('import'), path: '/import', icon: Upload },
     { name: t('academyManagement'), path: '/dashboard/academy', icon: Globe },
+    { name: 'محتوى الموقع', path: '/media', icon: Globe },
     { name: t('settings'), path: '/settings', icon: Settings },
   ];
 
@@ -74,7 +71,7 @@ export default function Sidebar() {
     try {
       const res = await fetch('/api/auth/logout', { method: 'POST' });
       if (res.ok) {
-        router.push('/login');
+        router.push('/');
         router.refresh();
       }
     } catch (error) {

@@ -14,7 +14,8 @@ export interface IAcademyContent extends Document {
     vision: string;
     mission: string;
     story: string;
-    imageUrl: string;
+    imageUrl?: string;
+    imageFit?: 'cover' | 'contain';
   };
   whyChooseUs: {
     icon: string;
@@ -50,7 +51,8 @@ const AcademyContentSchema = new Schema<IAcademyContent>(
       vision: { type: String, default: 'رؤيتنا هي بناء جيل رياضي متميز خلقاً وبدناً، قادر على المنافسة في المحافل الدولية وتمثيل الوطن بأفضل صورة.' },
       mission: { type: String, default: 'مهمتنا هي توفير بيئة تدريبية احترافية وآمنة باستخدام أفضل الأساليب العلمية الحديثة تحت إشراف نخبة من المدربين الدوليين.' },
       story: { type: String, default: 'تأسست الأكاديمية لتكون منارة رياضية متكاملة تخرج الأبطال والمنافسين على الألقاب المحلية والدولية، مع التركيز على الانضباط والروح الرياضية.' },
-      imageUrl: { type: String, default: '/logo.jpg' },
+      imageUrl: { type: String, default: '/about_us_image.jpg' },
+      imageFit: { type: String, enum: ['cover', 'contain'], default: 'cover' },
     },
     whyChooseUs: [
       {

@@ -55,20 +55,15 @@ export default function Dashboard() {
     switch (beltName) {
       case 'White':
         return 'bg-white text-black';
-      case 'Yellow 1':
-      case 'Yellow 2':
-      case 'Yellow 3':
+      case 'Yellow':
         return 'bg-yellow-400 text-black';
-      case 'Orange 1':
-      case 'Orange 2':
-      case 'Orange 3':
+      case 'Orange':
         return 'bg-orange-500 text-black';
-      case 'Green 1':
+      case 'Green':
         return 'bg-green-600 text-white';
-      case 'Blue 1':
+      case 'Blue':
         return 'bg-blue-600 text-white';
-      case 'Brown 1':
-      case 'Brown 2':
+      case 'Brown':
         return 'bg-[#78350F] text-white';
       case 'Black Belt':
         return 'bg-black text-[#FF9500] border border-[#FF9500] shadow-glow-orange';
@@ -182,35 +177,7 @@ export default function Dashboard() {
               </div>
 
               {/* Graphical Visualizations Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Age Categories distribution */}
-                <div className="glass-card-premium border border-[#2A2A2A] rounded-xl p-6 relative shadow-glow-orange/5 hover:border-[#FF9500]/30 transition-all duration-300">
-                  <h3 className="font-heading font-black text-lg text-[#F2F2F2] uppercase tracking-wider mb-6 border-b border-[#2A2A2A] pb-3 flex items-center gap-2">
-                    <Award className="h-5 w-5 text-[#FF9500] animate-pulse" />
-                    <span>{t('categoryBreakdown')}</span>
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    {data.categoryGroups.map((group) => {
-                      const percentage = data.totalPlayers > 0 ? (group.count / data.totalPlayers) * 100 : 0;
-                      return (
-                        <div key={group.name} className="space-y-1">
-                          <div className="flex justify-between text-xs font-mono">
-                            <span className="text-[#F2F2F2] font-semibold">{group.name}</span>
-                            <span className="text-[#FF9500] font-bold">{group.count} لاعب</span>
-                          </div>
-                          <div className="h-2.5 w-full bg-[#0E0E0E] rounded-full overflow-hidden border border-[#2A2A2A] p-0.5">
-                            <div
-                              className="h-full bg-gradient-to-r from-[#FF9500] via-[#FF2A00] to-[#D90000] rounded-full transition-all duration-500"
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
+              <div className="grid grid-cols-1 gap-8">
                 {/* Belts rank distribution */}
                 <div className="glass-card-premium border border-[#2A2A2A] rounded-xl p-6 shadow-glow-orange/5 hover:border-[#F2C94C]/30 transition-all duration-300">
                   <h3 className="font-heading font-black text-lg text-[#F2F2F2] uppercase tracking-wider mb-6 border-b border-[#2A2A2A] pb-3 flex items-center gap-2">

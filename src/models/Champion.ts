@@ -27,19 +27,17 @@ const ChampionSchema = new Schema<IChampion>(
     },
     ageCategory: {
       type: String,
-      required: true,
       trim: true,
-      default: 'أشبال (تحت 12 سنة)',
+      default: '',
     },
     sportCategory: {
       type: String,
-      required: true,
       trim: true,
-      default: 'كاتا فردي',
+      default: '',
     },
     achievements: {
       type: String,
-      default: 'بطل الجمهورية والميدالية الذهبية 2026',
+      default: '',
     },
     socialLinks: {
       facebook: { type: String, default: '' },

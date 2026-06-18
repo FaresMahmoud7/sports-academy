@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { useLanguage } from '@/components/LanguageContext';
 import {
   Globe,
@@ -16,8 +16,6 @@ import {
   ChevronRight,
   ChevronLeft,
   X,
-  Facebook,
-  Instagram,
   Shield,
   Clock,
   Compass,
@@ -32,6 +30,20 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+
+const FacebookIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+  </svg>
+);
+
+const InstagramIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+  </svg>
+);
 
 interface Champion {
   _id: string;
@@ -72,6 +84,11 @@ interface Coach {
   instagramUrl?: string;
 }
 
+interface DocumentItem {
+  name: string;
+  url: string;
+}
+
 interface AcademyContent {
   hero: {
     title: string;
@@ -86,6 +103,7 @@ interface AcademyContent {
     mission: string;
     story: string;
     imageUrl: string;
+    imageFit?: string;
   };
   whyChooseUs: {
     icon: string;
@@ -106,7 +124,7 @@ interface AcademyContent {
   };
 }
 
-export default function Home() {
+function HomeContent() {
   const { t, isRtl, language, setLanguage } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -117,10 +135,20 @@ export default function Home() {
   // Loading & State
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState<AcademyContent | null>(null);
+
+  // Safe content with defaults to prevent undefined crashes
+  const safeContent: AcademyContent = content ?? {
+    hero: { title: 'أكاديمية الأبطال', subtitle: 'مصنع الأبطال', ctaText: 'انضم إلينا', ctaLink: '#contact', mediaUrl: '/logo.jpg' },
+    about: { introduction: '', vision: '', mission: '', story: '', imageUrl: '/ابطالنا/احمد سالم.jpeg', imageFit: 'contain' },
+    whyChooseUs: [],
+    statistics: { championsCount: 0, tournamentsCount: 0, yearsOfExperience: 0, traineesCount: 0 },
+    contact: { address: '', phone: '01555888842', email: '', googleMapUrl: '' },
+  };
   const [champions, setChampions] = useState<Champion[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
 
   // Auth State
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -139,7 +167,7 @@ export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Contact Form State
-  const [contactForm, setContactForm] = useState({ name: '', phone: '', email: '', subject: '', message: '' });
+  const [contactForm, setContactForm] = useState({ name: '', phone: '', sportType: '', subject: '', message: '' });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formSubmitting, setFormSubmitting] = useState(false);
 
@@ -183,12 +211,30 @@ export default function Home() {
         setLoading(true);
         // Singleton content
         const contentRes = await fetch('/api/academy/content');
+        const defaultContent = {
+          hero: { title: 'أكاديمية الأبطال', subtitle: 'مصنع الأبطال', ctaText: 'انضم إلينا', ctaLink: '#contact', mediaUrl: '/logo.jpg' },
+          about: { introduction: '', vision: '', mission: '', story: '', imageUrl: '/ابطالنا/احمد سالم.jpeg', imageFit: 'contain' },
+          whyChooseUs: [],
+          statistics: { championsCount: 0, tournamentsCount: 0, yearsOfExperience: 0, traineesCount: 0 },
+          contact: { address: '', phone: '01555888842', email: '', googleMapUrl: '' },
+        };
         if (contentRes.ok) {
-          setContent(await contentRes.json());
+          const raw = await contentRes.json();
+          // Merge with defaults in case DB doc is missing nested fields
+          setContent({
+            hero: raw.hero ?? defaultContent.hero,
+            about: raw.about ?? defaultContent.about,
+            whyChooseUs: raw.whyChooseUs ?? defaultContent.whyChooseUs,
+            statistics: raw.statistics ?? defaultContent.statistics,
+            contact: raw.contact ?? defaultContent.contact,
+          });
+        } else {
+          setContent(defaultContent);
         }
 
-        // Champions
-        const championsRes = await fetch('/api/academy/champions');
+
+        // Champions - fetch from new DB route
+        const championsRes = await fetch('/api/champions');
         if (championsRes.ok) {
           setChampions(await championsRes.json());
         }
@@ -199,16 +245,25 @@ export default function Home() {
           setTestimonials(await testimonialsRes.json());
         }
 
-        // Gallery
-        const galleryRes = await fetch('/api/academy/gallery');
+        // Gallery - fetch from new DB route
+        const galleryRes = await fetch('/api/gallery');
         if (galleryRes.ok) {
-          setGallery(await galleryRes.json());
+          const dbGallery = await galleryRes.json();
+          if (dbGallery.length > 0) {
+            setGallery(dbGallery);
+          }
         }
 
         // Coaches (GET is now public!)
         const coachesRes = await fetch('/api/coaches');
         if (coachesRes.ok) {
           setCoaches(await coachesRes.json());
+        }
+
+        // Documents
+        const docsRes = await fetch('/api/documents');
+        if (docsRes.ok) {
+          setDocuments(await docsRes.json());
         }
       } catch (err) {
         console.error('Error fetching public landing page data:', err);
@@ -271,13 +326,30 @@ export default function Home() {
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormSubmitting(true);
-    // Simulate API call for form submission
+
+    const targetPhone = safeContent.contact.phone || '01555888842';
+    let formattedPhone = targetPhone.replace(/\s+/g, '');
+    if (formattedPhone.startsWith('0')) {
+      formattedPhone = '2' + formattedPhone;
+    }
+
+    const messageText = language === 'ar'
+      ? `السلام عليكم ورحمة الله وبركاته،\nأود الاستفسار عن تفاصيل الأكاديمية:\n\n*الاسم بالكامل:* ${contactForm.name}\n*رقم الهاتف:* ${contactForm.phone}\n*نوع الرياضة المهتم بها:* ${contactForm.sportType || 'غير محدد'}\n*الموضوع:* ${contactForm.subject}\n*تفاصيل الاستفسار:* ${contactForm.message}`
+      : `Hello, I'd like to inquire about the academy:\n\n*Full Name:* ${contactForm.name}\n*Phone:* ${contactForm.phone}\n*Sport Type:* ${contactForm.sportType || 'Not specified'}\n*Subject:* ${contactForm.subject}\n*Details:* ${contactForm.message}`;
+
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(messageText)}`;
+
     setTimeout(() => {
       setFormSubmitting(false);
       setFormSubmitted(true);
-      setContactForm({ name: '', phone: '', email: '', subject: '', message: '' });
+      setContactForm({ name: '', phone: '', sportType: '', subject: '', message: '' });
+      
+      if (typeof window !== 'undefined') {
+        window.open(whatsappUrl, '_blank');
+      }
+      
       setTimeout(() => setFormSubmitted(false), 5000);
-    }, 1500);
+    }, 1200);
   };
 
   const handleLightboxNav = (direction: 'prev' | 'next') => {
@@ -305,7 +377,7 @@ export default function Home() {
     }
   };
 
-  if (loading || !content) {
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0E0E0E]">
         <div className="flex flex-col items-center gap-3">
@@ -319,12 +391,11 @@ export default function Home() {
   const navLinks = [
     { name: language === 'ar' ? 'الرئيسية' : 'Home', href: '#home' },
     { name: language === 'ar' ? 'من نحن' : 'About Us', href: '#about' },
+    { name: language === 'ar' ? 'الرياضات' : 'Sports', href: '#sports' },
     { name: language === 'ar' ? 'المميزات' : 'Why Us', href: '#why-us' },
     { name: language === 'ar' ? 'أبطالنا' : 'Champions', href: '#champions' },
-    { name: language === 'ar' ? 'المدربون' : 'Coaches', href: '#coaches' },
     { name: language === 'ar' ? 'المعرض' : 'Gallery', href: '#gallery' },
-    { name: language === 'ar' ? 'الآراء' : 'Reviews', href: '#reviews' },
-    { name: language === 'ar' ? 'اتصل بنا' : 'Contact', href: '#contact' },
+    { name: language === 'ar' ? 'تواصل معنا' : 'Contact', href: '#contact' },
   ];
 
   return (
@@ -344,10 +415,10 @@ export default function Home() {
             </div>
             <div>
               <h1 className="font-heading font-black text-sm md:text-base tracking-wider text-[#FF9500] leading-none">
-                {language === 'ar' ? 'أكاديمية الأبطال' : 'Champions Academy'}
+                Champions Academy
               </h1>
               <span className="font-mono text-[9px] text-[#828282] uppercase tracking-widest block mt-0.5">
-                {content.hero.subtitle}
+                {safeContent.hero.subtitle}
               </span>
             </div>
           </Link>
@@ -358,7 +429,7 @@ export default function Home() {
               <a
                 key={link.href}
                 href={link.href}
-                className="text-xs font-semibold uppercase tracking-wider text-[#828282] hover:text-[#FF9500] transition-colors"
+                className="text-xs font-bold uppercase tracking-wider text-[#F2F2F2] hover:text-[#FF9500] transition-colors"
               >
                 {link.name}
               </a>
@@ -388,9 +459,10 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/dashboard"
-                  className="bg-[#FF9500] text-black font-extrabold text-xs uppercase tracking-wider px-4 py-2 rounded-lg flex items-center gap-1.5 hover:bg-[#F2C94C] transition-all shadow-glow-orange cursor-pointer"
+                  className="bg-[#FF9500] p-2 rounded-lg text-black hover:bg-[#F2C94C] transition-all shadow-glow-orange flex items-center justify-center cursor-pointer"
+                  title={language === 'ar' ? 'لوحة التحكم' : 'Dashboard'}
                 >
-                  <span>{language === 'ar' ? 'لوحة التحكم' : 'Dashboard'}</span>
+                  <Lock className="h-4 w-4" />
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -449,7 +521,7 @@ export default function Home() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
               </div>
-              <span className="font-heading font-black text-[#FF9500] text-sm uppercase">أكاديمية الأبطال</span>
+              <span className="font-heading font-black text-[#FF9500] text-sm uppercase">Champions Academy</span>
             </div>
 
             <nav className="flex flex-col gap-4 flex-1">
@@ -526,24 +598,24 @@ export default function Home() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-black uppercase leading-tight tracking-wider">
-              {content.hero.title}
+              {safeContent.hero.title}
             </h1>
 
             {/* Slogan */}
             <h2 className="text-2xl sm:text-3xl font-heading font-black text-gradient-premium tracking-wider animate-float drop-shadow-[0_0_15px_rgba(255,149,0,0.2)]">
-              "{content.hero.subtitle}"
+              "{safeContent.hero.subtitle}"
             </h2>
 
-            <p className="text-sm md:text-base text-[#828282] max-w-xl mx-auto lg:mx-0 leading-relaxed font-body">
-              {content.about.introduction}
+            <p className="text-sm md:text-base text-[#F2F2F2] max-w-xl mx-auto lg:mx-0 leading-relaxed font-body">
+              {safeContent.about.introduction}
             </p>
 
             <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <a
-                href={content.hero.ctaLink}
+                href={safeContent.hero.ctaLink}
                 className="bg-[#FF9500] text-black font-extrabold uppercase tracking-wider px-8 py-4 rounded-lg flex items-center justify-center gap-2 hover:bg-[#F2C94C] hover:scale-[1.02] transition-all shadow-glow-orange cursor-pointer"
               >
-                <span>{content.hero.ctaText}</span>
+                <span>{safeContent.hero.ctaText}</span>
                 <ChevronRight className={`h-5 w-5 ${isRtl ? 'rotate-180' : ''}`} />
               </a>
               <a
@@ -555,25 +627,63 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Hero Right Banner Image */}
-          <div className="relative aspect-video lg:aspect-square w-full rounded-2xl border border-[#2A2A2A] overflow-hidden shadow-glow-orange max-w-xl mx-auto">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={content.hero.mediaUrl}
-              alt="Champions Academy Karate Training"
-              className="h-full w-full object-cover hover:scale-102 transition-transform duration-700"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-6">
-              <div className="flex items-center gap-4 bg-[#1C1B1B]/80 backdrop-blur border border-[#2A2A2A] p-4 rounded-xl max-w-xs">
-                <Users className="h-10 w-10 text-[#FF9500] flex-shrink-0" />
-                <div>
-                  <h4 className="font-bold text-xs uppercase text-[#F2F2F2]">{language === 'ar' ? 'انضم لأكثر من' : 'Join more than'}</h4>
-                  <span className="font-heading font-black text-[#FF9500] text-lg">{content.statistics.traineesCount}+ {language === 'ar' ? 'بطل' : 'champions'}</span>
-                </div>
+          {/* Hero Right: Founder Highlight Profile */}
+          <div className="relative w-full rounded-3xl border border-[#2A2A2A] bg-black/60 backdrop-blur-xl overflow-hidden p-6 shadow-glow-orange max-w-xl mx-auto">
+            
+            {/* Header Badge */}
+            <div className={`absolute top-4 ${isRtl ? 'left-4' : 'right-4'} z-10 bg-[#FF9500] text-black font-extrabold text-[9px] uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-lg`}>
+              {language === 'ar' ? 'مؤسس ورئيس الأكاديمية' : 'Founder & Director'}
+            </div>
+
+            <div className={`flex flex-col ${isRtl ? 'sm:flex-row' : 'sm:flex-row-reverse'} gap-6 items-center`}>
+              {/* Profile Image with Ring */}
+              <div className="relative h-36 w-36 sm:h-44 sm:w-44 rounded-2xl border-2 border-[#FF9500] overflow-hidden shadow-glow-orange-lg flex-shrink-0 hover:scale-105 transition-transform duration-500">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/founder.jpg"
+                  alt="Captain Ahmed Salem Gamal"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+
+              {/* Name & Primary Titles */}
+              <div className={`text-center ${isRtl ? 'sm:text-right' : 'sm:text-left'} space-y-2`}>
+                <h3 className="text-xl sm:text-2xl font-heading font-black text-gradient-premium tracking-wide">
+                  {language === 'ar' ? 'كابتن / أحمد سالم جمال' : 'Capt. Ahmed Salem Gamal'}
+                </h3>
+                <p className="text-xs font-semibold text-[#FF9500] font-mono">
+                  {language === 'ar' ? 'عضو مجلس اللجان والمدير العام للأكاديمية' : 'Technical Committee Member & General Director'}
+                </p>
+                <p className="text-[11px] text-[#F2F2F2] leading-relaxed font-body">
+                  {language === 'ar' 
+                    ? 'صانع الأبطال ورائد الفكر التدريبي والتربوي الحديث في رياضة الكاراتيه، قاد الأكاديمية لبناء أجيال من أبطال الجمهورية والمنتخب الوطني.'
+                    : 'The championship maker and leader of modern training and educational thought in Karate, who led the academy to build generations of national champions.'
+                  }
+                </p>
               </div>
             </div>
-          </div>
 
+            {/* List of Titles / Achievements */}
+            <div className={`mt-6 pt-5 border-t border-[#2A2A2A]/80 grid grid-cols-1 gap-2 text-xs ${isRtl ? 'text-right' : 'text-left'}`}>
+              {[
+                { ar: 'عضو اللجنة الفنية لمنطقة الاسكندرية للكاراتية', en: 'Technical Committee Member of Alexandria Karate Region' },
+                { ar: 'عضو لجنة المدربين بالاتحاد المصري الكاراتية', en: 'Coaches Committee Member of the Egyptian Karate Federation' },
+                { ar: 'مدير فني مركز شباب السيوف 2', en: 'Technical Director of Al-Siyouf 2 Youth Center' },
+                { ar: 'مدير فني كلية تربية رياضية بنات - بفلمنج', en: 'Technical Director at the Faculty of Physical Education for Girls (Fleming)' },
+                { ar: 'مدير فني نادي قتة السكندري', en: 'Technical Director of Qattah Alexandrian Club' },
+                { ar: 'مدير عام اكاديميات The Champions Academy', en: 'General Director of The Champions Academy' },
+              ].map((item, idx) => (
+                <div key={idx} className={`flex items-start gap-2.5 bg-[#1C1B1B]/40 p-2.5 rounded-lg border border-[#2A2A2A]/50 ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
+                  <div className="h-4 w-4 rounded-full bg-[#FF9500]/10 border border-[#FF9500]/30 text-[#FF9500] flex items-center justify-center font-mono text-[9px] font-bold mt-0.5">
+                    ✓
+                  </div>
+                  <span className="text-[#F2F2F2] font-semibold leading-relaxed flex-1">
+                    {language === 'ar' ? item.ar : item.en}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -585,8 +695,8 @@ export default function Home() {
           
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
             <span className="text-[#FF9500] font-mono text-xs uppercase tracking-widest">{language === 'ar' ? 'مسيرة تميز ونجاح' : 'Success Story'}</span>
-            <h2 className="text-3xl sm:text-4xl font-heading font-black uppercase text-gradient-premium tracking-wider">{language === 'ar' ? 'من نحن - قصة مصنع الأبطال' : 'About Us & Our History'}</h2>
-            <p className="text-sm text-[#828282]">{language === 'ar' ? 'تعرف على تاريخ الأكاديمية ورؤيتنا الرياضية الشاملة' : 'Learn about our deep sports vision and karate training ethics'}</p>
+            <h2 className="text-3xl sm:text-4xl font-heading font-black uppercase text-gradient-premium tracking-wider pb-2 leading-relaxed">{language === 'ar' ? 'من نحن - قصة مصنع الأبطال' : 'About Us & Our History'}</h2>
+            <p className="text-sm text-[#F2F2F2]">{language === 'ar' ? 'تعرف على تاريخ الأكاديمية ورؤيتنا الرياضية الشاملة' : 'Learn about our deep sports vision and karate training ethics'}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -594,15 +704,16 @@ export default function Home() {
             {/* Image Beside Content */}
             <div className="relative aspect-[4/3] w-full rounded-2xl border border-[#2A2A2A] overflow-hidden shadow-glow-orange max-w-lg mx-auto order-last lg:order-first">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={content.about.imageUrl} alt="About Champions Academy" className="h-full w-full object-cover" />
+              <img src={safeContent.about.imageUrl} alt="About Champions Academy" className={`h-full w-full ${safeContent.about.imageFit === 'contain' ? 'object-contain' : 'object-cover'}`} />
             </div>
 
             {/* Rich Content Panel */}
             <div className="space-y-6">
               <div>
                 <h3 className="text-xl font-heading font-black text-[#FF9500] mb-3 uppercase">{language === 'ar' ? 'بناء جيل رياضي متميز' : 'Shaping a Dynamic Generation'}</h3>
-                <p className="text-sm md:text-base text-[#828282] leading-relaxed font-body whitespace-pre-line">
-                  {content.about.story}
+                <p className="text-sm md:text-base text-[#F2F2F2] leading-relaxed font-body whitespace-pre-line pb-4">
+                  {language === 'ar' ? 'تأسست أكاديمية الأبطال في عام 2009، ومنذ ذلك الحين ونحن نحافظ على ثبات المستوى وارتفاع معدل الإنجازات عاماً بعد عام. مسيرتنا تتحدث عن نفسها من خلال أجيال من الأبطال الذين رفعوا اسم الأكاديمية عالياً في شتى المحافل.\n\n' : 'Founded in 2009, Champions Academy has maintained a consistent level of excellence and rising achievements year after year. Our journey speaks for itself through generations of champions who have raised our name high.\n\n'}
+                  {safeContent.about.story}
                 </p>
               </div>
 
@@ -611,13 +722,13 @@ export default function Home() {
                 <div className="p-5 bg-[#0E0E0E] rounded-xl border border-[#2A2A2A] space-y-2 underlit-card-orange">
                   <Compass className="h-6 w-6 text-[#FF9500]" />
                   <h4 className="font-heading font-black text-sm text-[#F2F2F2] uppercase">{language === 'ar' ? 'رؤيتنا' : 'Our Vision'}</h4>
-                  <p className="text-xs text-[#828282] leading-relaxed">{content.about.vision}</p>
+                  <p className="text-xs text-[#828282] leading-relaxed">{safeContent.about.vision}</p>
                 </div>
 
                 <div className="p-5 bg-[#0E0E0E] rounded-xl border border-[#2A2A2A] space-y-2 underlit-card-red">
                   <Shield className="h-6 w-6 text-[#D90000]" />
                   <h4 className="font-heading font-black text-sm text-[#F2F2F2] uppercase">{language === 'ar' ? 'رسالتنا' : 'Our Mission'}</h4>
-                  <p className="text-xs text-[#828282] leading-relaxed">{content.about.mission}</p>
+                  <p className="text-xs text-[#828282] leading-relaxed">{safeContent.about.mission}</p>
                 </div>
               </div>
             </div>
@@ -630,27 +741,190 @@ export default function Home() {
       {/* ===============================================================
           SECTION 3: WHY CHOOSE US
           =============================================================== */}
-      <section id="why-us" className="py-24 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="why-us" className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-mesh-dark opacity-20" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <span className="text-[#FF9500] font-mono text-xs uppercase tracking-widest">{language === 'ar' ? 'نقاط القوة والمزايا' : 'Our Main Strengths'}</span>
-            <h2 className="text-3xl sm:text-4xl font-heading font-black uppercase text-gradient-premium tracking-wider">{language === 'ar' ? 'لماذا يفضلنا الجميع؟' : 'Why Choose Champions Academy?'}</h2>
-            <p className="text-sm text-[#828282]">{language === 'ar' ? 'نقدم لكم منظومة رياضية شاملة تضمن التميز والانضباط للأبطال' : 'Professional coach crew, certified training courses, and top-tier facilities'}</p>
+          <div className="text-center max-w-4xl mx-auto mb-16 space-y-5">
+            <h2 className="text-4xl sm:text-5xl font-heading font-black uppercase text-gradient-premium tracking-wider pb-2 leading-relaxed">{language === 'ar' ? 'لماذا يفضلنا الجميع؟' : 'Why Choose Champions Academy?'}</h2>
+            <p className="text-base text-[#F2F2F2] leading-relaxed">{language === 'ar' ? 'منذ تأسيسنا عام 2009، نصنع الأبطال ونبني الأجيال بفلسفة رياضية فريدة تجمع بين الانضباط العسكري والعلم الحديث' : 'Since our founding in 2009, we build champions with a unique philosophy combining military discipline and modern sports science'}</p>
           </div>
 
-          {/* Strengths Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {content.whyChooseUs.map((strength, idx) => (
-              <div
-                key={idx}
-                className="p-6 bg-[#1C1B1B] rounded-xl border border-[#2A2A2A] space-y-4 glow-interactive hover:scale-102 hover:border-[#FF9500] transition-all duration-300"
-              >
-                <div className="h-14 w-14 rounded-lg bg-[#FF9500]/5 flex items-center justify-center border border-[#FF9500]/10 shadow-inner">
-                  {getStrengthIcon(strength.icon)}
+          {/* 6 Big Achievement Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+            {[
+              {
+                titleAr: 'مدربون معتمدون دولياً',
+                titleEn: 'Internationally Certified Coaches',
+                descAr: 'جميع مدربينا حاصلون على اعتمادات رسمية من الاتحادَين المصري والدولي للكاراتيه، وكثيرون منهم أبطال جمهورية سابقون يحملون حزام أسود دان 3 فأعلى — هذا هو سر التميز الذي لا يجاريه أحد.',
+                titleEnFull: 'Our coaches hold official certifications from the Egyptian & International Karate Federations. Many are former national champions with Black Belt Dan 3+ — the secret behind our unmatched excellence.',
+                icon: '🏅',
+                color: '#FF9500',
+              },
+              {
+                titleAr: 'منهج تدريبي علمي متكامل',
+                titleEn: 'Integrated Scientific Training System',
+                descAr: 'لا عشوائية في تدريباتنا — كل حصة مبنية على منهج علمي دقيق يراعي عمر اللاعب ومستواه وأهدافه الشخصية، مع متابعة دورية لقياس التقدم وضمان التطور المستمر.',
+                titleEnFull: 'No randomness in our training — every session is built on a precise scientific curriculum tailored to the player\'s age, level, and personal goals with periodic progress tracking.',
+                icon: '📋',
+                color: '#F2C94C',
+              },
+              {
+                titleAr: 'سجل إنجازات يتكلم عن نفسه',
+                titleEn: 'Track Record That Speaks for Itself',
+                descAr: 'أكثر من 15 عاماً من الفوز ببطولات محلية وإقليمية متواصلة. لاعبونا موجودون في المنتخبات الوطنية وعلى منصات التتويج في أكبر بطولات الجمهورية.',
+                titleEnFull: 'Over 15 years of consecutive wins in local and regional championships. Our players compete in national teams and champion podiums in Egypt\'s biggest tournaments.',
+                icon: '🏆',
+                color: '#D90000',
+              },
+              {
+                titleAr: 'بيئة آمنة وإيجابية 100%',
+                titleEn: '100% Safe & Positive Environment',
+                descAr: 'نؤمن أن الرياضة تبني الشخصية قبل الجسد. لذلك نحرص على توفير بيئة تدريبية آمنة وداعمة ومحفزة للأطفال والشباب، بعيداً تماماً عن أي شكل من أشكال الضغط النفسي السلبي.',
+                titleEnFull: 'We believe sport builds character before body. We provide a safe, supportive and motivating training environment for youth — free from any form of negative pressure.',
+                icon: '🛡️',
+                color: '#FF9500',
+              },
+              {
+                titleAr: 'برامج مصممة لكل المستويات',
+                titleEn: 'Programs for All Levels',
+                descAr: 'سواء كنت مبتدئاً في أولى خطواتك أو بطلاً تسعى لمزيد من الإنجاز — لدينا البرنامج المناسب لك. نستقبل اللاعبين من سن 4 سنوات وحتى ما فوق الـ 40!',
+                titleEnFull: 'Whether you\'re a beginner in your first steps or a champion seeking more — we have the right program. We accept players from age 4 to 40+!',
+                icon: '🎯',
+                color: '#F2C94C',
+              },
+              {
+                titleAr: 'انتماء حقيقي ومجتمع رياضي',
+                titleEn: 'Real Belonging & Sports Community',
+                descAr: 'نحن لسنا مجرد أكاديمية — نحن عائلة رياضية متماسكة. نحتفل بإنجازات بعضنا ونتحمل مسؤولية تطور كل لاعب كأنه من أهلنا، لأن النجاح الحقيقي يُصنع بالجماعة.',
+                titleEnFull: 'We are not just an academy — we are a cohesive sports family. We celebrate each other\'s achievements and take responsibility for every player\'s growth because true success is built together.',
+                icon: '🤝',
+                color: '#D90000',
+              },
+            ].map((item, idx) => (
+              <div key={idx} className="group relative bg-[#1C1B1B] border border-[#2A2A2A] rounded-2xl p-6 hover:border-[#FF9500] hover:scale-[1.01] transition-all duration-300 overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#FF9500]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <span className="text-4xl">{item.icon}</span>
+                    <div>
+                      <h3 className="font-heading font-black text-lg text-[#F2F2F2] leading-tight">
+                        {language === 'ar' ? item.titleAr : item.titleEn}
+                      </h3>
+                      <div className="h-0.5 w-12 mt-1 rounded-full" style={{ backgroundColor: item.color }} />
+                    </div>
+                  </div>
+                  <p className="text-sm text-[#828282] leading-relaxed font-body">
+                    {language === 'ar' ? item.descAr : item.titleEnFull}
+                  </p>
                 </div>
-                <h3 className="font-heading font-black text-base text-[#F2F2F2] uppercase">{strength.title}</h3>
-                <p className="text-xs text-[#828282] leading-relaxed">{strength.description}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* DB-loaded Why Choose Us Cards */}
+          {safeContent.whyChooseUs && safeContent.whyChooseUs.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {safeContent.whyChooseUs.map((strength, idx) => (
+                <div
+                  key={idx}
+                  className="p-6 bg-[#1C1B1B] rounded-xl border border-[#2A2A2A] space-y-4 glow-interactive hover:scale-102 hover:border-[#FF9500] transition-all duration-300"
+                >
+                  <div className="h-14 w-14 rounded-lg bg-[#FF9500]/5 flex items-center justify-center border border-[#FF9500]/10 shadow-inner">
+                    {getStrengthIcon(strength.icon)}
+                  </div>
+                  <h3 className="font-heading font-black text-base text-[#F2F2F2] uppercase">{strength.title}</h3>
+                  <p className="text-sm text-[#F2F2F2] leading-relaxed">{strength.description}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
+      </section>
+
+      {/* ===============================================================
+          SECTION: SPORTS & DISCIPLINES SECTION
+          =============================================================== */}
+      <section id="sports" className="py-24 bg-[#1C1B1B]/40 border-t border-b border-[#2A2A2A]/40 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <h2 className="text-4xl sm:text-5xl font-heading font-black uppercase text-gradient-premium tracking-wider pb-2 leading-relaxed">{language === 'ar' ? 'الرياضات والأنشطة في الأكاديمية' : 'Our Academy Disciplines'}</h2>
+            <p className="text-base text-[#F2F2F2]">{language === 'ar' ? 'منظومة رياضية متكاملة تحت إشراف نخبة من أفضل المدربين المحترفين على مستوى الجمهورية' : 'Integrated sports system supervised by elite professional coaches nationwide'}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[
+              {
+                titleAr: 'كاراتيه (Karate)',
+                titleEn: 'Karate',
+                descAr: 'رياضة الدفاع عن النفس العريقة التي تركز على الضربات المباشرة باليدين والركل وصد الهجمات، وبناء شخصية منضبطة وقوية جسدياً وذهنياً. الأكاديمية توفر التدريب المتخصص في أقسام الكاراتيه الرئيسية: (الكاتا - Kata) للاستعراض الحركي الدقيق و (الكوميتيه - Kumite) للقتال الفعلي والبطولات.',
+                descEn: 'The traditional self-defense martial art focusing on hand strikes, kicks, block techniques, and building a disciplined character. We provide specialized training in main divisions: (Kata) for precise forms and (Kumite) for actual sparring.',
+                praiseAr: 'نفخر بوجود نخبة من مدربي الكاراتيه المعتمدين دولياً بالاتحاد المصري والذين قادوا لاعبينا لمنصات التتويج وحصد البطولات المحلية والدولية.',
+                praiseEn: 'We are proud of our elite internationally-certified Egyptian Federation coaches who have led our champions to dominate national and international championships.',
+                icon: <Trophy className="h-8 w-8 text-[#FF9500]" />
+              },
+              {
+                titleAr: 'كونغ فو (Kung Fu)',
+                titleEn: 'Kung Fu',
+                descAr: 'الفن القتالي الصيني التقليدي الذي يجمع بين الحركات الدائرية السلسة والضربات السريعة الفعالة، والأساليب القتالية والاستعراضية (ساندا وتاولو).',
+                descEn: 'The traditional Chinese martial art combining smooth circular movements, rapid strikes, and diverse combat/form styles (Sanda & Taolu).',
+                praiseAr: 'يشرف على تدريبات الكونغ فو لدينا مدربون استثنائيون يركزون على تنمية المرونة الفائقة، القوة الانفجارية، والدفاع الفعال عن النفس بأساليب علمية حديثة.',
+                praiseEn: 'Our Kung Fu section is run by exceptional coaches focusing on developing ultimate flexibility, explosive power, and modern defense methodologies.',
+                icon: <Shield className="h-8 w-8 text-[#FF9500]" />
+              },
+              {
+                titleAr: 'كيك بوكسينج (Kickboxing)',
+                titleEn: 'Kickboxing',
+                descAr: 'رياضة قتالية حماسية تجمع بين تقنيات الملاكمة والركلات القوية، وهي الخيار الأمثل لرفع اللياقة البدنية والتحمل وحرق الدهون وتطوير المهارات الدفاعية.',
+                descEn: 'An energetic combat sport combining boxing techniques and powerful kicks, perfect for boosting physical fitness, stamina, fat loss, and practical self-defense.',
+                praiseAr: 'طاقم تدريب الكيك بوكسينج لدينا يضم أبطالاً محترفين يضمنون تدريباً آمناً وحماسياً يرفع ثقتك بنفسك ويوصلك لأفضل لياقة وقوة بدنية ممكنة.',
+                praiseEn: 'Our Kickboxing training crew includes professional champions who ensure a safe, high-energy environment to boost confidence and physical health.',
+                icon: <Users className="h-8 w-8 text-[#FF9500]" />
+              },
+              {
+                titleAr: 'جمباز (Gymnastics)',
+                titleEn: 'Gymnastics',
+                descAr: 'الرياضة الأساسية لبناء جسد مرن وقوي، تركز على الحركات البهلوانية والتوازن، الرشاقة، والتوافق العضلي العصبي، وهي حجر الأساس لجميع الرياضات.',
+                descEn: 'The foundational sport for building a flexible and strong body, focusing on acrobatics, balance, agility, and motor coordination—the key for all sports.',
+                praiseAr: 'مدربو الجمباز لدينا متخصصون في تدريب الأطفال والناشئين، ملتزمون تماماً بمعايير الأمان والسلامة الدولية مع التركيز على التطوير الحركي المتكامل.',
+                praiseEn: 'Our Gymnastics coaches specialize in children and youth training, fully committed to international safety standards and complete motor development.',
+                icon: <Award className="h-8 w-8 text-[#FF9500]" />
+              }
+            ].map((sport, idx) => (
+              <div key={idx} className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-2xl p-6 hover:border-[#FF9500] hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+                <div className="absolute top-0 right-0 h-1 w-full bg-gradient-to-r from-transparent via-[#FF9500] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-black/40 rounded-xl border border-[#2A2A2A] text-[#FF9500] group-hover:shadow-glow-orange transition-all duration-300">
+                      {sport.icon}
+                    </div>
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-heading font-black text-[#F2F2F2]">
+                        {language === 'ar' ? sport.titleAr : sport.titleEn}
+                      </h3>
+                      <span className="text-[9px] text-[#FF9500]/70 font-mono tracking-wider block mt-0.5 uppercase">
+                        {language === 'ar' ? 'قسم معتمد بالأكاديمية' : 'Approved Discipline'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-[#828282] leading-relaxed font-body">
+                    {language === 'ar' ? sport.descAr : sport.descEn}
+                  </p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-[#2A2A2A]/40 bg-black/20 p-4 rounded-xl border border-[#2A2A2A]/50">
+                  <div className="flex items-center gap-1.5 text-[#FF9500] text-[10px] font-mono font-bold uppercase tracking-wider mb-1.5">
+                    <Star className="h-3.5 w-3.5 fill-[#FF9500] animate-pulse" />
+                    <span>{language === 'ar' ? 'طاقم التدريب المتميز' : 'Elite Coach Review'}</span>
+                  </div>
+                  <p className="text-[11px] text-[#F2F2F2]/90 leading-relaxed font-body italic">
+                    "{language === 'ar' ? sport.praiseAr : sport.praiseEn}"
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -664,64 +938,53 @@ export default function Home() {
       <section id="champions" className="py-24 bg-[#1C1B1B]/20 border-t border-b border-[#2A2A2A]/40 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <span className="text-[#FF9500] font-mono text-xs uppercase tracking-widest">{language === 'ar' ? 'لوحة الشرف للأكاديمية' : 'Showcase Honor Roll'}</span>
-            <h2 className="text-3xl sm:text-4xl font-heading font-black uppercase text-gradient-premium tracking-wider">{language === 'ar' ? 'تعرف على أبطال الأكاديمية' : 'Meet Our Champions'}</h2>
-            <p className="text-sm text-[#828282]">{language === 'ar' ? 'أبطال حصدوا الميداليات الذهبية والفضية في بطولات الجمهورية والبطولات الدولية' : 'Trainees who won gold medals and local/international karate tournaments'}</p>
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <span className="text-[#FF9500] font-mono text-xs uppercase tracking-widest">{language === 'ar' ? 'التميز والبطولة' : 'Excellence & Glory'}</span>
+            <h2 className="text-3xl sm:text-4xl font-heading font-black uppercase text-gradient-premium tracking-wider pb-2 leading-relaxed">{language === 'ar' ? 'أبطال الأكاديمية' : 'Academy Champions'}</h2>
+            <p className="text-sm text-[#F2F2F2]">{language === 'ar' ? 'سجل شرف لأبطالنا الذين حققوا المراكز الأولى في البطولات المحلية والدولية' : 'Honor roll of our champions who secured first places in local and international tournaments'}</p>
           </div>
 
-          {/* Champions Card Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Champions Card Grid — centered */}
+          <div className="flex flex-wrap justify-center gap-6">
             {champions.map((champ) => (
               <div
                 key={champ._id}
-                className="group relative bg-[#1C1B1B] border border-[#2A2A2A] rounded-2xl overflow-hidden hover:border-[#FF9500] hover:scale-102 transition-all duration-300 flex flex-col justify-between"
+                className="group relative bg-[#1C1B1B] border border-[#2A2A2A] rounded-2xl overflow-hidden hover:border-[#FF9500] hover:scale-105 transition-all duration-300 flex flex-col justify-between w-full sm:w-[260px] lg:w-[280px]"
               >
-                {/* Photo */}
-                <div className="relative aspect-square w-full bg-[#0E0E0E] overflow-hidden border-b border-[#2A2A2A]">
+                {/* Photo — tall portrait */}
+                <div className="relative aspect-[3/4] w-full bg-[#0E0E0E] overflow-hidden border-b border-[#2A2A2A]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={champ.photoUrl} alt={champ.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  
-                  {/* Age and Sport Labels */}
-                  <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
-                    <span className="bg-black/85 backdrop-blur-sm border border-[#2A2A2A] text-[#FF9500] font-mono text-[9px] font-semibold py-1 px-2.5 rounded-full">
-                      {champ.sportCategory}
-                    </span>
-                    <span className="bg-black/85 backdrop-blur-sm border border-[#2A2A2A] text-[#F2C94C] font-mono text-[9px] font-semibold py-1 px-2.5 rounded-full">
-                      {champ.ageCategory}
-                    </span>
-                  </div>
+                  {/* Gradient overlay at bottom */}
+                  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#1C1B1B] to-transparent" />
                 </div>
 
-                {/* Info */}
-                <div className="p-5 flex-1 flex flex-col justify-between gap-4">
-                  <div className="space-y-2">
-                    <h3 className="font-heading font-black text-sm md:text-base text-[#F2F2F2] uppercase tracking-wide group-hover:text-[#FF9500] transition-colors">{champ.name}</h3>
-                    <p className="text-xs text-[#828282] leading-relaxed line-clamp-3 italic">"{champ.achievements}"</p>
-                  </div>
+                {/* Info — centered */}
+                <div className="p-4 flex flex-col items-center gap-2 text-center">
+                  <h3 className="font-heading font-black text-sm md:text-base text-[#F2F2F2] uppercase tracking-wide group-hover:text-[#FF9500] transition-colors">{champ.name}</h3>
+                  <span className="font-mono text-[9px] text-emerald-400 font-semibold tracking-wider uppercase">🏆 بطل الأكاديمية</span>
 
-                  {/* Social links (optional) */}
-                  <div className="flex items-center justify-between border-t border-[#2A2A2A]/40 pt-3">
-                    <span className="font-mono text-[9px] text-emerald-400 font-semibold tracking-wider uppercase">🏆 بطل الأكاديمية</span>
-                    <div className="flex gap-2.5 text-[#828282]">
+                  {/* Social links */}
+                  {(champ.socialLinks?.facebook || champ.socialLinks?.instagram) && (
+                    <div className="flex gap-3 text-[#828282] mt-1">
                       {champ.socialLinks?.facebook && (
                         <a href={champ.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9500] transition-colors">
-                          <Facebook className="h-3.5 w-3.5" />
+                          <FacebookIcon className="h-3.5 w-3.5" />
                         </a>
                       )}
                       {champ.socialLinks?.instagram && (
                         <a href={champ.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9500] transition-colors">
-                          <Instagram className="h-3.5 w-3.5" />
+                          <InstagramIcon className="h-3.5 w-3.5" />
                         </a>
                       )}
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             ))}
 
             {champions.length === 0 && (
-              <div className="col-span-2 lg:col-span-4 bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl p-12 text-center text-[#828282] font-mono text-sm">
+              <div className="w-full bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl p-12 text-center text-[#F2F2F2] font-mono text-sm">
                 {language === 'ar' ? 'سوف يتم الإعلان عن لوحة الشرف قريباً!' : 'Honor roll will be listed here soon.'}
               </div>
             )}
@@ -730,109 +993,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===============================================================
-          SECTION 5: ACHIEVEMENTS & STATISTICS
-          =============================================================== */}
-      <section className="py-20 relative overflow-hidden bg-[#0E0E0E] border-b border-[#2A2A2A]/40">
-        <div className="absolute inset-0 bg-mesh-dark opacity-10" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            
-            <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 bg-[#1C1B1B]/40 rounded-xl border border-[#2A2A2A]/60 underlit-card-orange">
-              <span className="font-heading font-black text-3xl sm:text-4xl md:text-5xl text-[#FF9500] tracking-wider pulse-glow-orange">
-                {content.statistics.championsCount}
-              </span>
-              <span className="font-mono text-[10px] sm:text-xs text-[#828282] uppercase tracking-widest block font-bold">{language === 'ar' ? 'بطل معتمد' : 'Certified Champions'}</span>
-            </div>
 
-            <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 bg-[#1C1B1B]/40 rounded-xl border border-[#2A2A2A]/60 underlit-card-red">
-              <span className="font-heading font-black text-3xl sm:text-4xl md:text-5xl text-[#D90000] tracking-wider">
-                {content.statistics.tournamentsCount}
-              </span>
-              <span className="font-mono text-[10px] sm:text-xs text-[#828282] uppercase tracking-widest block font-bold">{language === 'ar' ? 'بطولة مسجلة' : 'Tournaments Won'}</span>
-            </div>
 
-            <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 bg-[#1C1B1B]/40 rounded-xl border border-[#2A2A2A]/60 underlit-card-gold">
-              <span className="font-heading font-black text-3xl sm:text-4xl md:text-5xl text-[#F2C94C] tracking-wider">
-                {content.statistics.yearsOfExperience}
-              </span>
-              <span className="font-mono text-[10px] sm:text-xs text-[#828282] uppercase tracking-widest block font-bold">{language === 'ar' ? 'سنوات الخبرة' : 'Years of Experience'}</span>
-            </div>
 
-            <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 bg-[#1C1B1B]/40 rounded-xl border border-[#2A2A2A]/60 underlit-card-orange">
-              <span className="font-heading font-black text-3xl sm:text-4xl md:text-5xl text-[#FF9500] tracking-wider">
-                {content.statistics.traineesCount}
-              </span>
-              <span className="font-mono text-[10px] sm:text-xs text-[#828282] uppercase tracking-widest block font-bold">{language === 'ar' ? 'متدرب نشط' : 'Active Trainees'}</span>
-            </div>
 
-          </div>
-
-        </div>
-      </section>
-
-      {/* ===============================================================
-          SECTION 8: COACHES SECTION
-          =============================================================== */}
-      <section id="coaches" className="py-24 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <span className="text-[#FF9500] font-mono text-xs uppercase tracking-widest">{language === 'ar' ? 'خبراء التدريب' : 'Expert Trainers'}</span>
-            <h2 className="text-3xl sm:text-4xl font-heading font-black uppercase text-gradient-premium tracking-wider">{language === 'ar' ? 'طاقمنا التدريبي المعتمد' : 'Meet Our Certified Coaches'}</h2>
-            <p className="text-sm text-[#828282]">{language === 'ar' ? 'نخبة من المدربين الدوليين ذوي الخبرة الطويلة والحاصلين على أحزمة سوداء درجات متقدمة' : 'World class karate masters, championship competitors, and black belt degrees'}</p>
-          </div>
-
-          {/* Coaches Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {coaches.map((coach) => (
-              <div
-                key={coach._id}
-                className="p-6 bg-[#1C1B1B] border border-[#2A2A2A] rounded-2xl flex flex-col sm:flex-row gap-6 items-center sm:items-start hover:border-[#FF9500] transition-all duration-300 shadow-md"
-              >
-                {/* Photo */}
-                <div className="h-28 w-28 rounded-xl border border-[#FF9500] overflow-hidden flex-shrink-0 bg-[#0E0E0E]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={coach.photoUrl || '/logo.jpg'} alt={coach.name} className="h-full w-full object-cover" />
-                </div>
-
-                {/* Profile Bio */}
-                <div className="flex-1 min-w-0 text-center sm:text-right space-y-2">
-                  <h3 className="font-heading font-black text-[#FF9500] text-lg uppercase">{coach.name}</h3>
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                    <span className="bg-[#0E0E0E] text-[#828282] font-mono text-[9px] font-semibold py-0.5 px-2 rounded border border-[#2A2A2A] uppercase">
-                      {coach.position || (language === 'ar' ? 'مدرب الأكاديمية' : 'Academy Coach')}
-                    </span>
-                    <span className="bg-[#0E0E0E] text-[#F2C94C] font-mono text-[9px] font-semibold py-0.5 px-2 rounded border border-[#2A2A2A] uppercase">
-                      {coach.experience || (language === 'ar' ? 'خبرة رياضية واسعة' : 'Experienced')}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-[#828282] leading-relaxed italic whitespace-pre-line pt-2">
-                    {coach.biography || (language === 'ar' ? 'مدرب متألق في رياضة الكاراتيه والدفاع عن النفس، كرس جهوده لبناء الأبطال وتعليم أساسيات اللعبة والانضباط.' : 'Dedicated karate master committed to training future champions and teaching focus.')}
-                  </p>
-
-                  <div className="flex items-center justify-center sm:justify-start gap-4 pt-3 text-[#828282]">
-                    {coach.facebookUrl && (
-                      <a href={coach.facebookUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9500] transition-colors">
-                        <Facebook className="h-4 w-4" />
-                      </a>
-                    )}
-                    {coach.instagramUrl && (
-                      <a href={coach.instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9500] transition-colors">
-                        <Instagram className="h-4 w-4" />
-                      </a>
-                    )}
-                    <span className="text-[10px] font-mono bg-[#0E0E0E] border border-[#2A2A2A] text-[#828282] px-2 py-0.5 rounded">{coach.phone}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
 
       {/* ===============================================================
           SECTION 6: GALLERY SECTION
@@ -840,10 +1004,10 @@ export default function Home() {
       <section id="gallery" className="py-24 bg-[#1C1B1B]/20 border-t border-b border-[#2A2A2A]/40 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <span className="text-[#FF9500] font-mono text-xs uppercase tracking-widest">{language === 'ar' ? 'معرض صور الأكاديمية' : 'Media Gallery'}</span>
-            <h2 className="text-3xl sm:text-4xl font-heading font-black uppercase text-gradient-premium tracking-wider">{language === 'ar' ? 'معرض لقطات وتدريبات الأبطال' : 'Our Training & Events Gallery'}</h2>
-            <p className="text-sm text-[#828282]">{language === 'ar' ? 'لقطات حية من داخل صالات الكاراتيه والبطولات والمشاركات الجماعية' : 'Snapshots from group sessions, local karate exams, and tournament podiums'}</p>
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <span className="text-[#FF9500] font-mono text-xs uppercase tracking-widest">{language === 'ar' ? 'لحظات من التألق' : 'Moments of Glory'}</span>
+            <h2 className="text-3xl sm:text-4xl font-heading font-black uppercase text-gradient-premium tracking-wider pb-2 leading-relaxed">{language === 'ar' ? 'معرض الإنجازات' : 'Achievements Gallery'}</h2>
+            <p className="text-sm text-[#F2F2F2]">{language === 'ar' ? 'جانب من مشاركات وتتويجات أبطال الأكاديمية في مختلف الفعاليات الرياضية' : 'Glimpses of our champions participations and coronations in various sports events'}</p>
           </div>
 
           {/* Gallery Grid */}
@@ -855,7 +1019,7 @@ export default function Home() {
                 className="group relative aspect-square bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl overflow-hidden hover:border-[#FF9500] hover:scale-102 transition-all duration-300 cursor-pointer shadow-md"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.imageUrl} alt={item.caption || 'Karate'} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={item.imageUrl} alt={item.caption || 'Karate'} className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500" />
                 
                 {/* Overlay on hover */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-end p-4 transition-opacity duration-300">
@@ -870,7 +1034,7 @@ export default function Home() {
 
             {gallery.length === 0 && (
               <div className="col-span-2 md:col-span-4 bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl p-12 text-center text-[#828282] font-mono text-sm">
-                {language === 'ar' ? 'سيتم مشاركة الصور في المعرض قريباً!' : 'No photos available to show in the gallery yet.'}
+                {language === 'ar' ? 'سيتم مشاركة صور الإنجازات والبطولات قريباً!' : 'No achievements available to show yet.'}
               </div>
             )}
           </div>
@@ -878,56 +1042,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===============================================================
-          SECTION 7: TESTIMONIALS SECTION
-          =============================================================== */}
-      <section id="reviews" className="py-24 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <span className="text-[#FF9500] font-mono text-xs uppercase tracking-widest">{language === 'ar' ? 'ثقة ومصداقية' : 'Client Feedback'}</span>
-            <h2 className="text-3xl sm:text-4xl font-heading font-black uppercase text-gradient-premium tracking-wider">{language === 'ar' ? 'ماذا يقول عنا أولياء الأمور؟' : 'Parent & Trainee Reviews'}</h2>
-            <p className="text-sm text-[#828282]">{language === 'ar' ? 'نعتز بثقتكم ونسعى دائماً لتقديم أفضل مستوى تدريبي وانضباطي لأبنائنا' : 'Discover what parents and students say about their training experience'}</p>
-          </div>
 
-          {/* Testimonial Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((test) => (
-              <div
-                key={test._id}
-                className="p-6 bg-[#1C1B1B] border border-[#2A2A2A] rounded-2xl flex flex-col justify-between hover:border-[#FF9500] hover:scale-102 transition-all duration-300 shadow-md"
-              >
-                <div>
-                  {/* Rating Stars */}
-                  <div className="flex items-center gap-1.5 text-[#F2C94C] mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`h-4 w-4 ${i < test.rating ? 'fill-[#F2C94C]' : 'opacity-20'}`} />
-                    ))}
-                  </div>
-                  {/* Review Text */}
-                  <p className="text-sm text-[#F2F2F2] italic leading-relaxed mb-6 font-body">"{test.reviewText}"</p>
-                </div>
-
-                {/* Profile */}
-                <div className="flex items-center gap-3 border-t border-[#2A2A2A] pt-4">
-                  <div className="h-10 w-10 rounded-full border border-custom overflow-hidden flex-shrink-0 bg-[#0E0E0E]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={test.profileImageUrl} alt={test.name} className="h-full w-full object-cover" />
-                  </div>
-                  <span className="font-heading font-black text-sm text-[#FF9500] tracking-wide">{test.name}</span>
-                </div>
-              </div>
-            ))}
-
-            {testimonials.length === 0 && (
-              <div className="col-span-1 md:col-span-3 bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl p-12 text-center text-[#828282] font-mono text-sm">
-                {language === 'ar' ? 'التقييمات قيد النشر قريباً!' : 'No client reviews are published yet.'}
-              </div>
-            )}
-          </div>
-
-        </div>
-      </section>
 
       {/* ===============================================================
           SECTION 9: CONTACT & REGISTER SECTION
@@ -945,7 +1060,7 @@ export default function Home() {
             
             {/* Contact Details & Map */}
             <div className="space-y-6 flex flex-col justify-between">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 
                 <div className="p-4 bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-[#FF9500]/10 text-[#FF9500]">
@@ -953,7 +1068,7 @@ export default function Home() {
                   </div>
                   <div className="min-w-0">
                     <span className="text-[10px] text-[#828282] uppercase tracking-wider block font-semibold">{language === 'ar' ? 'المقر' : 'Location'}</span>
-                    <span className="text-xs font-bold text-[#F2F2F2] truncate block">{content.contact.address}</span>
+                    <span className="text-xs font-bold text-[#F2F2F2] truncate block">{safeContent.contact.address}</span>
                   </div>
                 </div>
 
@@ -963,34 +1078,35 @@ export default function Home() {
                   </div>
                   <div className="min-w-0">
                     <span className="text-[10px] text-[#828282] uppercase tracking-wider block font-semibold">{language === 'ar' ? 'الهاتف' : 'Phone'}</span>
-                    <span className="text-xs font-bold text-[#F2F2F2] truncate block">{content.contact.phone}</span>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-[#FF9500]/10 text-[#FF9500]">
-                    <Mail className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] text-[#828282] uppercase tracking-wider block font-semibold">{language === 'ar' ? 'البريد' : 'Email'}</span>
-                    <span className="text-xs font-bold text-[#F2F2F2] truncate block">{content.contact.email}</span>
+                    <span className="text-xs font-bold text-[#F2F2F2] truncate block">01555888842</span>
                   </div>
                 </div>
 
               </div>
 
               {/* Embedded Google Map */}
-              <div className="aspect-video w-full rounded-2xl border border-[#2A2A2A] overflow-hidden shadow-md">
-                <iframe
-                  title="Champions Academy Location Map"
-                  src={content.contact.googleMapUrl}
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
+              <div className="aspect-video w-full rounded-2xl border border-[#2A2A2A] overflow-hidden shadow-md relative group">
+                {safeContent.contact.googleMapUrl ? (
+                  <iframe
+                    title="Champions Academy Location Map"
+                    src={safeContent.contact.googleMapUrl}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-[#1C1B1B] text-[#828282] text-xs">
+                    {language === 'ar' ? 'لم يتم تحديد الموقع على الخريطة بعد' : 'Map location not set yet'}
+                  </div>
+                )}
+                <a href="https://maps.app.goo.gl/eQqqy5B85VhiELtg6?g_st=aw" target="_blank" rel="noopener noreferrer" className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="bg-[#FF9500] text-black font-extrabold py-2 px-6 rounded-lg uppercase text-xs tracking-wider shadow-glow-orange cursor-pointer">
+                    {language === 'ar' ? 'فتح في خرائط جوجل' : 'Open in Google Maps'}
+                  </span>
+                </a>
               </div>
             </div>
 
@@ -1000,7 +1116,7 @@ export default function Home() {
                 <div className="absolute inset-0 bg-[#1C1B1B] flex flex-col items-center justify-center text-center p-6 space-y-4 animate-float z-10">
                   <CheckCircle className="h-16 w-16 text-emerald-500 animate-pulse" />
                   <h3 className="text-xl font-heading font-black text-[#FF9500] uppercase tracking-wider">{language === 'ar' ? 'تم إرسال رسالتك بنجاح!' : 'Message Sent Successfully!'}</h3>
-                  <p className="text-sm text-[#828282] max-w-xs">{language === 'ar' ? 'شكراً لتواصلك مع أكاديمية الأبطال. سيقوم فريق خدمة العملاء بالتواصل معك قريباً جداً.' : 'Thank you for reaching out. Our administration will contact you shortly.'}</p>
+                  <p className="text-sm text-[#828282] max-w-xs">{language === 'ar' ? 'شكراً لتواصلك مع Champions Academy. سيقوم فريق خدمة العملاء بالتواصل معك قريباً جداً.' : 'Thank you for reaching out. Our administration will contact you shortly.'}</p>
                 </div>
               ) : null}
 
@@ -1034,25 +1150,19 @@ export default function Home() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}</label>
-                  <input
-                    type="email"
-                    value={contactForm.email}
-                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'نوع الرياضة المهتم بها' : 'Interested Sport'}</label>
+                  <select
+                    value={contactForm.sportType}
+                    onChange={(e) => setContactForm({ ...contactForm, sportType: e.target.value })}
                     className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-xs text-[#F2F2F2] outline-none focus:border-[#FF9500]"
                     required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'موضوع الرسالة (مثال: حجز حصة تجريبية)' : 'Subject'}</label>
-                  <input
-                    type="text"
-                    value={contactForm.subject}
-                    onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
-                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-xs text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    required
-                  />
+                  >
+                    <option value="">{language === 'ar' ? 'اختر الرياضة...' : 'Select a sport...'}</option>
+                    <option value="كاراتيه (Karate)">{language === 'ar' ? 'كاراتيه' : 'Karate'}</option>
+                    <option value="كونغ فو (Kung Fu)">{language === 'ar' ? 'كونغ فو' : 'Kung Fu'}</option>
+                    <option value="كيك بوكسينج (Kickboxing)">{language === 'ar' ? 'كيك بوكسينج' : 'Kickboxing'}</option>
+                    <option value="جمباز (Gymnastics)">{language === 'ar' ? 'جمباز' : 'Gymnastics'}</option>
+                  </select>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -1096,10 +1206,10 @@ export default function Home() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
               </div>
-              <span className="font-heading font-black text-sm uppercase text-[#FF9500]">أكاديمية الأبطال</span>
+              <span className="font-heading font-black text-sm uppercase text-[#FF9500]">Champions Academy</span>
             </div>
             <p className="leading-relaxed text-[#828282] text-xs">
-              {content.about.introduction}
+              {safeContent.about.introduction}
             </p>
           </div>
 
@@ -1116,34 +1226,31 @@ export default function Home() {
             <h4 className="font-heading font-black text-xs text-[#F2F2F2] uppercase tracking-wider">{language === 'ar' ? 'الفئات' : 'Showcases'}</h4>
             <div className="flex flex-col gap-2">
               <a href="#champions" className="hover:text-[#FF9500] transition-colors">{language === 'ar' ? 'أبطال الأكاديمية' : 'Our Champions'}</a>
-              <a href="#coaches" className="hover:text-[#FF9500] transition-colors">{language === 'ar' ? 'طاقم المدربين' : 'Coaches Profiles'}</a>
-              <a href="#gallery" className="hover:text-[#FF9500] transition-colors">{language === 'ar' ? 'معرض الصور' : 'Media Gallery'}</a>
+              <a href="#gallery" className="hover:text-[#FF9500] transition-colors">{language === 'ar' ? 'إنجازاتنا' : 'Achievements'}</a>
             </div>
           </div>
 
           <div className="space-y-3">
             <h4 className="font-heading font-black text-xs text-[#F2F2F2] uppercase tracking-wider">{language === 'ar' ? 'تابعونا' : 'Social Channels'}</h4>
             <div className="flex gap-4 text-[#828282]">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9500] transition-colors bg-[#1C1B1B] border border-[#2A2A2A] p-2.5 rounded-lg">
-                <Facebook className="h-4 w-4" />
+              <a href="https://www.facebook.com/share/1DmotRhL6M/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9500] transition-colors bg-[#1C1B1B] border border-[#2A2A2A] p-2.5 rounded-lg">
+                <FacebookIcon className="h-4 w-4" />
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9500] transition-colors bg-[#1C1B1B] border border-[#2A2A2A] p-2.5 rounded-lg">
-                <Instagram className="h-4 w-4" />
+              <a href="https://www.instagram.com/the.champions88?igsh=OGRsdHNiY2J1eTdw" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9500] transition-colors bg-[#1C1B1B] border border-[#2A2A2A] p-2.5 rounded-lg">
+                <InstagramIcon className="h-4 w-4" />
               </a>
             </div>
             <p className="text-[10px] font-mono pt-2 text-[#828282]">
-              {language === 'ar' ? 'مصنع الأبطال - تحت الرعاية الكاملة لأكاديمية الأبطال للكاراتيه' : 'Karate Academy - Under the full patronage of Champions Academy'}
+              {language === 'ar' ? 'مصنع الأبطال - تحت الرعاية الكاملة لأكاديمية Champions Academy للكاراتيه' : 'Karate Academy - Under the full patronage of Champions Academy'}
             </p>
           </div>
 
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-[#2A2A2A]/40 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="font-mono text-[10px]">&copy; 2026 {language === 'ar' ? 'أكاديمية الأبطال. جميع الحقوق محفوظة.' : 'Champions Academy. All rights reserved.'}</p>
+          <p className="font-mono text-[10px]">&copy; 2026 {language === 'ar' ? 'Champions Academy. جميع الحقوق محفوظة.' : 'Champions Academy. All rights reserved.'}</p>
           <div className="flex items-center gap-4 text-[#828282] text-[10px] font-mono">
-            <span>Powered by Next.js & MongoDB</span>
-            <span>•</span>
-            <button onClick={() => setIsLoginModalOpen(true)} className="hover:text-[#FF9500] transition-colors">Admin Portal</button>
+            <span>Powered by Engineer / Fares Mahmoud</span>
           </div>
         </div>
       </footer>
@@ -1176,8 +1283,8 @@ export default function Home() {
                   <img src="/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
                 </div>
                 <div>
-                  <h4 className="font-heading font-black text-xs text-[#FF9500]">{language === 'ar' ? 'أكاديمية الأبطال للكاراتيه' : 'Champions Academy'}</h4>
-                  <span className="font-mono text-[9px] text-[#828282] tracking-widest uppercase">"{content.hero.subtitle}"</span>
+                  <h4 className="font-heading font-black text-xs text-[#FF9500]">Champions Academy</h4>
+                  <span className="font-mono text-[9px] text-[#828282] tracking-widest uppercase">"{safeContent.hero.subtitle}"</span>
                 </div>
               </div>
 
@@ -1283,5 +1390,13 @@ export default function Home() {
       )}
 
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0E0E0E]" />}>
+      <HomeContent />
+    </Suspense>
   );
 }

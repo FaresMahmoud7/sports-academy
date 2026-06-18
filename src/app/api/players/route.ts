@@ -24,7 +24,19 @@ export async function GET(request: Request) {
     const filterQuery: any = {};
 
     if (search) {
-      filterQuery.name = { $regex: search, $options: 'i' };
+      // Find coaches matching the search term to search by coach name
+      const matchingCoaches = await Coach.find({ name: { $regex: search, $options: 'i' } }).select('_id');
+      const matchingCoachIds = matchingCoaches.map(c => c._id);
+
+      filterQuery.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { fileNumber: { $regex: search, $options: 'i' } },
+        { nationalId: { $regex: search, $options: 'i' } }
+      ];
+
+      if (matchingCoachIds.length > 0) {
+        filterQuery.$or.push({ coachId: { $in: matchingCoachIds } });
+      }
     }
     if (belt) {
       filterQuery.belt = belt;
@@ -73,6 +85,9 @@ export async function POST(request: Request) {
       notes,
       trainingDays,
       trainingType,
+      fileNumber,
+      nationalId,
+      beltDate,
     } = body;
 
     if (!name || !birthYear || !parentPhone) {
@@ -93,6 +108,9 @@ export async function POST(request: Request) {
       notes,
       trainingDays: Array.isArray(trainingDays) ? trainingDays : [],
       trainingType: trainingType || '',
+      fileNumber: fileNumber || '',
+      nationalId: nationalId || '',
+      beltDate: beltDate || '',
     });
 
     await newPlayer.save();
