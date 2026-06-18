@@ -23,7 +23,7 @@ const CoachSchema = new Schema<ICoach>(
     },
     phone: {
       type: String,
-      required: true,
+      default: '',
       trim: true,
     },
     trainingDays: {
@@ -32,7 +32,7 @@ const CoachSchema = new Schema<ICoach>(
     },
     trainingTime: {
       type: String,
-      required: true,
+      default: '',
       trim: true,
     },
     players: [

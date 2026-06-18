@@ -460,7 +460,6 @@ export default function Coaches() {
                   </label>
                   <input
                     type="text"
-                    required={isAddOpen}
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"
@@ -473,7 +472,6 @@ export default function Coaches() {
                   </label>
                   <input
                     type="text"
-                    required={isAddOpen}
                     value={formData.trainingTime}
                     onChange={(e) => setFormData({ ...formData, trainingTime: e.target.value })}
                     className="w-full bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"

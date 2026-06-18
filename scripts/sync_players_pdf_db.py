@@ -39,9 +39,9 @@ with pdfplumber.open(pdf_path) as pdf:
         for row in table[start_idx:]:
             if not row or len(row) < 10: continue
             nat_id = str(row[7]).strip() if row[7] else ""
-            if not re.match(r'^\d{14}$', nat_id):
-                continue
             name = fix_arabic_text(row[8])
+            if not name or len(name) < 5 or "الاسم" in name:
+                continue
             file_num = str(row[9]).strip() if row[9] else ""
             
             # Extract Belt

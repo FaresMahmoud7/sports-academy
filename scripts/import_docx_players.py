@@ -65,27 +65,32 @@ def import_docx_players():
                         player_name = names[0]
                         parent_phone = phones[0] if phones else "00000000000"
                         
-                        # Check if player already exists
-                        existing = players_col.find_one({"name": player_name, "parentPhone": parent_phone})
-                        if not existing:
-                            new_player = {
-                                "name": player_name,
-                                "birthYear": 2015, # Default
-                                "belt": "White",
-                                "parentPhone": parent_phone,
-                                "registered": True,
-                                "coachId": coach_id,
-                                "notes": f"Imported from {filename}",
-                                "trainingDays": [],
-                                "trainingType": "",
-                                "fileNumber": "",
-                                "nationalId": "",
-                                "beltDate": ""
-                            }
-                            inserted = players_col.insert_one(new_player)
-                            # Add to coach's players array
-                            coaches_col.update_one({"_id": coach_id}, {"$push": {"players": inserted.inserted_id}})
-                            print(f"  Added player: {player_name} ({parent_phone})")
+                        # Fuzzy match with existing players
+                        # Get all db players for fuzzy matching
+                        db_players = list(players_col.find({}))
+                        db_names = [p['name'] for p in db_players]
+                        
+                        from thefuzz import fuzz, process
+                        
+                        match_player = None
+                        if db_names:
+                            result = process.extractOne(player_name, db_names, scorer=fuzz.token_set_ratio)
+                            if result:
+                                match_name, score = result
+                                if score >= 80:
+                                    match_player = next((p for p in db_players if p['name'] == match_name), None)
+                        
+                        if match_player:
+                            # Update player's coachId
+                            players_col.update_one({"_id": match_player['_id']}, {"$set": {"coachId": coach_id}})
+                            # Add to coach's players array if not already there
+                            coaches_col.update_one(
+                                {"_id": coach_id}, 
+                                {"$addToSet": {"players": match_player['_id']}}
+                            )
+                            print(f"  Linked player: {player_name} -> {match_player['name']}")
+                        else:
+                            print(f"  Player not found in DB: {player_name}")
 
     print("Import completed.")
 
