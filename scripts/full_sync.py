@@ -52,30 +52,42 @@ with pdfplumber.open(pdf_path) as pdf:
             if not name or 'الاسم' in name or 'م اعا' in name or len(name) < 7:
                 continue
             nat_id = str(row[7]).strip() if row[7] else ""
+            if not re.match(r'^\d{14}$', nat_id):
+                continue
             file_num = str(row[9]).strip() if row[9] else ""
-            raw_belt = row[1] if row[1] else ""
+            belt_date = str(row[1]).strip() if row[1] else ""
+            raw_belt = row[2] if row[2] else ""
             belt_str = fix_arabic_text(raw_belt)
             mapped_belt = "White"
-            if "دان" in belt_str or "اسود" in belt_str: mapped_belt = "Black Belt"
-            elif "بنى" in belt_str or "بني" in belt_str: mapped_belt = "Brown 1"
-            elif "ازرق" in belt_str or "أزرق" in belt_str: mapped_belt = "Blue 1"
-            elif "اخضر" in belt_str or "أخضر" in belt_str: mapped_belt = "Green 1"
-            elif "برتقالي" in belt_str or "برتقالى" in belt_str: mapped_belt = "Orange 1"
-            elif "اصفر" in belt_str or "أصفر" in belt_str: mapped_belt = "Yellow 1"
-            birth_date = str(row[5]).strip() if row[5] else ""
+            dan_degree = None
+            dan_match = re.search(r'(\d+)\s*-\s*دان|دان\s*-\s*(\d+)', belt_str)
+            if dan_match or "دان" in belt_str or "اسود" in belt_str or "ناد" in belt_str:
+                mapped_belt = "Black Belt"
+                dan_degree = int((dan_match.group(1) or dan_match.group(2)) if dan_match else 1)
+            elif "بنى" in belt_str or "بني" in belt_str or "ىنب" in belt_str: mapped_belt = "Brown"
+            elif "ازرق" in belt_str or "أزرق" in belt_str or "قرز" in belt_str: mapped_belt = "Blue"
+            elif "اخضر" in belt_str or "أخضر" in belt_str or "رضخ" in belt_str: mapped_belt = "Green"
+            elif "برتق" in belt_str or "ىلا" in belt_str: mapped_belt = "Orange"
+            elif "اصفر" in belt_str or "أصفر" in belt_str or "رفص" in belt_str: mapped_belt = "Yellow"
+            elif "ابيض" in belt_str or "أبيض" in belt_str or "ضيب" in belt_str: mapped_belt = "White"
+            birth_date = str(row[6]).strip() if row[6] else ""
             birth_year = 2015
             if birth_date:
                 try:
                     birth_year = int(birth_date.split('/')[0])
                 except:
                     pass
-            pdf_players.append({
+            entry = {
                 "name": name,
                 "nationalId": nat_id,
                 "fileNumber": file_num,
                 "belt": mapped_belt,
-                "birthYear": birth_year
-            })
+                "birthYear": birth_year,
+                "beltDate": belt_date,
+            }
+            if dan_degree:
+                entry["danDegree"] = dan_degree
+            pdf_players.append(entry)
 
 # Deduplicate PDF players by name
 seen_names = set()

@@ -16,8 +16,6 @@ export async function GET() {
 
     const totalPlayers = await Player.countDocuments();
     const totalCoaches = await Coach.countDocuments();
-    const registeredCount = await Player.countDocuments({ registered: true });
-    const nonRegisteredCount = totalPlayers - registeredCount;
 
     // Group players by belt, preserving ranking order and showing 0 counts
     const beltCounts: Record<string, number> = {};
@@ -68,8 +66,6 @@ export async function GET() {
     return NextResponse.json({
       totalPlayers,
       totalCoaches,
-      registeredCount,
-      nonRegisteredCount,
       beltGroups,
       categoryGroups,
     });

@@ -12,17 +12,8 @@ import {
   Eye,
   X,
   UserPlus,
-  Phone,
-  Calendar,
   AlertTriangle,
-  Award,
 } from 'lucide-react';
-
-interface CoachData {
-  _id: string;
-  name: string;
-  phone: string;
-}
 
 interface PlayerData {
   _id: string;
@@ -33,7 +24,6 @@ interface PlayerData {
   danDegree?: number;
   parentPhone: string;
   registered: boolean;
-  coachId: CoachData | null;
   category: string;
   notes?: string;
   trainingDays: string[];
@@ -58,15 +48,12 @@ export default function Players() {
 
   // List states
   const [players, setPlayers] = useState<PlayerData[]>([]);
-  const [coaches, setCoaches] = useState<CoachData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   // Search & Filter states
   const [search, setSearch] = useState('');
   const [beltFilter, setBeltFilter] = useState('');
-  const [coachFilter, setCoachFilter] = useState('');
-  const [trainingTypeFilter, setTrainingTypeFilter] = useState('');
 
   // Modals state
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -84,25 +71,19 @@ export default function Players() {
     belt: 'White' as BeltType,
     danDegree: 1,
     parentPhone: '',
-    registered: false,
-    coachId: '',
     notes: '',
     trainingDays: [] as string[],
-    trainingType: '',
     fileNumber: '',
     nationalId: '',
     beltDate: '',
   });
 
-  // Fetch players and coaches
   const fetchPlayers = async () => {
     try {
       setLoading(true);
       const query = new URLSearchParams({
         search,
         belt: beltFilter,
-        coachId: coachFilter,
-        trainingType: trainingTypeFilter,
       });
 
       const res = await fetch(`/api/players?${query.toString()}`);
@@ -127,28 +108,11 @@ export default function Players() {
     }
   };
 
-  const fetchCoaches = async () => {
-    try {
-      const res = await fetch('/api/coaches');
-      if (res.ok) {
-        const data = await res.json();
-        setCoaches(data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch coaches', err);
-    }
-  };
-
   useEffect(() => {
     fetchPlayers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, beltFilter, coachFilter, trainingTypeFilter]);
+  }, [search, beltFilter]);
 
-  useEffect(() => {
-    fetchCoaches();
-  }, []);
-
-  // Handle forms
   const openAddModal = () => {
     setFormData({
       name: '',
@@ -156,11 +120,8 @@ export default function Players() {
       belt: 'White',
       danDegree: 1,
       parentPhone: '',
-      registered: false,
-      coachId: '',
       notes: '',
       trainingDays: [],
-      trainingType: '',
       fileNumber: '',
       nationalId: '',
       beltDate: '',
@@ -176,11 +137,8 @@ export default function Players() {
       belt: player.belt,
       danDegree: player.danDegree || 1,
       parentPhone: player.parentPhone,
-      registered: player.registered,
-      coachId: player.coachId?._id || '',
       notes: player.notes || '',
       trainingDays: player.trainingDays || [],
-      trainingType: player.trainingType || '',
       fileNumber: player.fileNumber || '',
       nationalId: player.nationalId || '',
       beltDate: player.beltDate || '',
@@ -304,6 +262,9 @@ export default function Players() {
             </h1>
             <p className="text-xs text-[#828282] tracking-wider uppercase font-mono mt-1">
               إدارة وتتبع وحساب الفئات العمرية والدرجات
+              {!loading && players.length > 0 && (
+                <span className="text-[#FF9500] font-bold mr-2"> — {players.length} لاعب</span>
+              )}
             </p>
           </div>
           <button
@@ -316,7 +277,7 @@ export default function Players() {
         </div>
 
         {/* Filters Card */}
-        <div className="bg-[#1C1B1B] border border-[#2A2A2A] rounded p-4 mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="bg-[#1C1B1B] border border-[#2A2A2A] rounded p-4 mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Search input */}
           <div className="relative lg:col-span-2">
             <span className={`absolute inset-y-0 ${isRtl ? 'left-3' : 'right-3'} flex items-center text-[#828282]`}>
@@ -327,7 +288,7 @@ export default function Players() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"
-              placeholder={language === 'ar' ? 'بحث بالاسم، رقم الملف، الرقم القومي، اسم المدرب...' : 'Search by name, file no, national ID, coach...'}
+              placeholder={language === 'ar' ? 'بحث بالاسم، رقم الملف، الرقم القومي...' : 'Search by name, file no, national ID...'}
             />
           </div>
 
@@ -344,38 +305,6 @@ export default function Players() {
               </option>
             ))}
           </select>
-
-
-
-          {/* Coach filter */}
-          <select
-            value={coachFilter}
-            onChange={(e) => setCoachFilter(e.target.value)}
-            className="bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"
-          >
-            <option value="">كل المدربين</option>
-            <option value="null">غير معين لمدرب</option>
-            {coaches.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-
-          {/* Training Type filter */}
-          <select
-            value={trainingTypeFilter}
-            onChange={(e) => setTrainingTypeFilter(e.target.value)}
-            className="bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"
-          >
-            <option value="">كل التمارين</option>
-            <option value="كاتا">كاتا (Kata)</option>
-            <option value="كوميتيه">كوميتيه (Kumite)</option>
-            <option value="فتنس">فتنس (Fitness)</option>
-            <option value="اختبارات">اختبارات (Exams)</option>
-          </select>
-
-
         </div>
 
         {/* Players Directory Content */}
@@ -398,20 +327,20 @@ export default function Players() {
               <table className="w-full text-right border-collapse">
                 <thead>
                   <tr className="bg-[#0E0E0E] border-b border-[#2A2A2A] text-xs font-mono uppercase tracking-wider text-[#828282]">
+                    <th className="p-4 font-bold text-center">#</th>
                     <th className="p-4 font-bold">{t('fullName')}</th>
                     <th className="p-4 font-bold">رقم الملف</th>
                     <th className="p-4 font-bold">الرقم القومي</th>
                     <th className="p-4 font-bold">{t('birthYear')}</th>
                     <th className="p-4 font-bold">{t('beltLevel')}</th>
                     <th className="p-4 font-bold">تاريخ الحزام</th>
-                    <th className="p-4 font-bold">{t('trainingType')}</th>
-                    <th className="p-4 font-bold">{t('assignedCoach')}</th>
                     <th className="p-4 font-bold text-center">الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#2A2A2A] text-sm">
-                  {players.map((player) => (
+                  {players.map((player, index) => (
                     <tr key={player._id} className="hover:bg-[#252424]/40 transition-colors">
+                      <td className="p-4 font-mono text-xs text-[#828282] text-center">{index + 1}</td>
                       <td className="p-4 font-bold text-[#F2F2F2]">{player.name}</td>
                       <td className="p-4 font-mono text-xs text-[#828282]">{player.fileNumber || '—'}</td>
                       <td className="p-4 font-mono text-xs text-[#828282]">{player.nationalId || '—'}</td>
@@ -428,18 +357,6 @@ export default function Players() {
                         </span>
                       </td>
                       <td className="p-4 font-mono text-xs text-[#828282]">{player.beltDate || '—'}</td>
-                      <td className="p-4">
-                        {player.trainingType ? (
-                          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-[#FF9500]/10 border border-[#FF9500]/20 text-[#FF9500]">
-                            {player.trainingType}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-[#828282] font-mono">—</span>
-                        )}
-                      </td>
-                      <td className="p-4 text-xs font-semibold text-[#828282]">
-                        {player.coachId ? player.coachId.name : t('noCoach')}
-                      </td>
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -470,14 +387,17 @@ export default function Players() {
 
             {/* Mobile Card Layout (hidden on desktop) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:hidden">
-              {players.map((player) => (
+              {players.map((player, index) => (
                 <div
                   key={player._id}
                   className="bg-[#1C1B1B] border border-[#2A2A2A] rounded p-4 flex flex-col justify-between hover:border-[#FF9500] transition-colors"
                 >
                   <div>
                     <div className="flex justify-between items-start gap-2 mb-2">
-                      <span className="font-bold text-[#F2F2F2]">{player.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-[#828282] bg-[#0E0E0E] border border-[#2A2A2A] rounded px-1.5 py-0.5">#{index + 1}</span>
+                        <span className="font-bold text-[#F2F2F2]">{player.name}</span>
+                      </div>
                       <span
                         className={`inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold ${getBeltColorClass(
                           player.belt
@@ -490,22 +410,11 @@ export default function Players() {
                     <div className="space-y-1 font-mono text-[11px] text-[#828282] mb-4">
                       <p>
                         السنة:{' '}
-                        <span className="text-[#F2F2F2]">
-                          {player.birthYear}
-                        </span>
+                        <span className="text-[#F2F2F2]">{player.birthYear}</span>
                       </p>
-                      <p>
-                        نوع التمرين:{' '}
-                        <span className="text-emerald-400 font-bold">
-                          {player.trainingType || 'غير محدد'}
-                        </span>
-                      </p>
-                      <p>
-                        المدرب:{' '}
-                        <span className="text-[#F2F2F2]">
-                          {player.coachId ? player.coachId.name : t('noCoach')}
-                        </span>
-                      </p>
+                      {player.fileNumber && (
+                        <p>رقم الملف: <span className="text-[#F2F2F2]">{player.fileNumber}</span></p>
+                      )}
                     </div>
                   </div>
 
@@ -672,44 +581,6 @@ export default function Players() {
                 </div>
               </div>
 
-              {/* Assign Coach & Training status */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-[#828282] mb-1 font-bold">
-                    {t('assignedCoach')}
-                  </label>
-                  <select
-                    value={formData.coachId}
-                    onChange={(e) => setFormData({ ...formData, coachId: e.target.value })}
-                    className="w-full bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"
-                  >
-                    <option value="">{t('noCoach')}</option>
-                    {coaches.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-[#828282] mb-1 font-bold">
-                    {t('trainingType')}
-                  </label>
-                  <select
-                    value={formData.trainingType || ''}
-                    onChange={(e) => setFormData({ ...formData, trainingType: e.target.value })}
-                    className="w-full bg-[#0E0E0E] text-xs border border-[#2A2A2A] rounded px-3 py-2 text-[#F2F2F2] focus:outline-none focus:border-[#FF9500]"
-                  >
-                    <option value="">غير محدد</option>
-                    <option value="كاتا">كاتا (Kata)</option>
-                    <option value="كوميتيه">كوميتيه (Kumite)</option>
-                    <option value="فتنس">فتنس (Fitness)</option>
-                    <option value="اختبارات">اختبارات (Exams)</option>
-                  </select>
-                </div>
-              </div>
-
               {/* Training Days */}
               <div>
                 <label className="block text-[10px] font-mono uppercase tracking-wider text-[#828282] mb-1.5 font-bold">
@@ -848,21 +719,10 @@ export default function Players() {
                 </div>
                 <div>
                   <span className="text-[#828282] block text-[9px] uppercase tracking-wider">
-                    نوع التمرين
+                    رقم الملف
                   </span>
-                  <span className="text-emerald-400 font-bold">
-                    {selectedPlayer.trainingType || 'غير محدد'}
-                  </span>
+                  <span className="text-white font-bold">{selectedPlayer.fileNumber || '—'}</span>
                 </div>
-              </div>
-
-              <div>
-                <span className="block text-[10px] font-mono uppercase tracking-wider text-[#828282] mb-1 font-bold">
-                  {t('assignedCoach')}
-                </span>
-                <p className="text-xs text-[#F2F2F2] bg-[#0E0E0E] p-2.5 rounded border border-[#2A2A2A]">
-                  {selectedPlayer.coachId ? selectedPlayer.coachId.name : t('noCoach')}
-                </p>
               </div>
 
               <div>

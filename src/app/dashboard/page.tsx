@@ -3,13 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/components/LanguageContext';
 import Sidebar from '@/components/Sidebar';
-import { Users, Shield, Award, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Shield, Award } from 'lucide-react';
 
 interface StatData {
   totalPlayers: number;
   totalCoaches: number;
-  registeredCount: number;
-  nonRegisteredCount: number;
   beltGroups: { name: string; count: number }[];
   categoryGroups: { name: string; count: number }[];
 }
@@ -114,7 +112,7 @@ export default function Dashboard() {
           data && (
             <div className="space-y-8">
               {/* Widgets Stats Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* Total Players Card */}
                 <div className="glass-card-premium border border-[#2A2A2A] rounded-xl p-6 flex items-center justify-between glow-interactive underlit-card-orange shadow-glow-orange/5 hover:shadow-glow-orange/20 transition-all duration-300">
                   <div>
@@ -142,36 +140,6 @@ export default function Dashboard() {
                   </div>
                   <div className="p-3.5 rounded-lg bg-[#F2C94C]/10 border border-[#F2C94C]/30 text-[#F2C94C] shadow-inner transition-transform duration-300">
                     <Shield className="h-6 w-6 animate-pulse" />
-                  </div>
-                </div>
-
-                {/* Registered Players Card */}
-                <div className="glass-card-premium border border-[#2A2A2A] rounded-xl p-6 flex items-center justify-between glow-interactive underlit-card-orange shadow-glow-orange/5 hover:shadow-glow-orange/20 transition-all duration-300">
-                  <div>
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#828282] font-black block mb-1">
-                      {t('registeredPlayers')}
-                    </span>
-                    <span className="font-heading font-black text-4xl text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.2)]">
-                      {data.registeredCount}
-                    </span>
-                  </div>
-                  <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-inner transition-transform duration-300">
-                    <CheckCircle className="h-6 w-6" />
-                  </div>
-                </div>
-
-                {/* Non-Registered Players Card */}
-                <div className="glass-card-premium border border-[#2A2A2A] rounded-xl p-6 flex items-center justify-between glow-interactive underlit-card-red shadow-glow-red/5 hover:shadow-glow-red/20 transition-all duration-300">
-                  <div>
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#828282] font-black block mb-1">
-                      {t('nonRegisteredPlayers')}
-                    </span>
-                    <span className="font-heading font-black text-4xl text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.2)]">
-                      {data.nonRegisteredCount}
-                    </span>
-                  </div>
-                  <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 shadow-inner transition-transform duration-300">
-                    <XCircle className="h-6 w-6" />
                   </div>
                 </div>
               </div>
