@@ -214,16 +214,6 @@ const ImageUploadField = ({
                 : (language === 'ar' ? 'اختر صورة من جهازك' : 'Choose image from device')}
             </label>
           </div>
-          <div className="text-[10px] text-[#828282] text-center sm:text-left">
-            {language === 'ar' ? 'أو أدخل رابط الصورة مباشرة بالأسفل:' : 'Or enter image URL directly below:'}
-          </div>
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-[#0E0E0E] border border-[#2A2A2A] rounded p-2 text-xs text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-            placeholder={language === 'ar' ? 'أدخل رابط الصورة...' : 'Enter image URL...'}
-          />
         </div>
       </div>
     </div>
@@ -598,18 +588,6 @@ export default function AcademyManagement() {
       });
 
       if (!res.ok) throw new Error('Failed to save coach profile');
-
-      const updatedCoach = await res.json();
-      setCoaches(coaches.map(c => c._id === coachModal.coachId ? updatedCoach : c));
-      showToast(language === 'ar' ? 'تم تحديث الملف التعريفي للمدرب' : 'Coach profile updated successfully', 'success');
-      setCoachModal({ open: false, form: { photoUrl: '', position: '', experience: '', biography: '', facebookUrl: '', instagramUrl: '' } });
-    } catch (err: any) {
-      showToast(err.message || 'Error updating coach profile', 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0E0E0E]">
@@ -626,7 +604,6 @@ export default function AcademyManagement() {
     { id: 'kickboxing', name: language === 'ar' ? 'قسم الكيك بوكسينج' : 'Kickboxing Section', icon: Award },
     { id: 'why_stats_contact', name: language === 'ar' ? 'المميزات والتواصل' : 'Why Us & Contact', icon: Shield },
     { id: 'champions', name: language === 'ar' ? 'إدارة الأبطال' : 'Our Champions', icon: Trophy },
-    { id: 'coaches', name: language === 'ar' ? 'الملفات التعريفية للمدربين' : 'Coaches Profiles', icon: UserCheck },
     { id: 'gallery', name: language === 'ar' ? 'إنجازاتنا' : 'Achievements', icon: ImageIcon },
   ] as const;
 
@@ -1319,67 +1296,6 @@ export default function AcademyManagement() {
             </div>
           </div>
         )}
-
-        {/* ===============================================================
-            TAB 6: COACHES EXTENDED PROFILES
-            =============================================================== */}
-        {activeTab === 'coaches' && (
-          <div className="space-y-6 animate-float">
-            <div className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl p-4">
-              <h3 className="font-heading font-black text-[#FF9500] uppercase text-sm tracking-wider">{language === 'ar' ? 'تخصيص الملفات التعريفية للمدربين' : 'Coaches Profiles Customization'}</h3>
-              <p className="font-mono text-xs text-[#828282] mt-1">
-                {language === 'ar' 
-                  ? 'أضف صور المدربين والمناصب الرياضية والسيرة الذاتية وروابط التواصل الاجتماعي لتظهر على الصفحة الرئيسية' 
-                  : 'Add coach photographs, physical roles, experiences, biographies, and social links to showcase on landing page'}
-              </p>
-            </div>
-
-            {/* Coaches List Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {coaches.map((coach) => (
-                <div key={coach._id} className="glass-card-premium rounded-xl border border-[#2A2A2A] p-5 flex flex-col md:flex-row gap-5 items-center md:items-start hover:border-[#FF9500] transition-all duration-300">
-                  <div className="h-24 w-24 rounded-lg border border-[#FF9500] overflow-hidden flex-shrink-0 bg-[#0E0E0E]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={coach.photoUrl || '/logo.jpg'} alt={coach.name} className="h-full w-full object-cover" />
-                  </div>
-
-                  <div className="flex-1 min-w-0 text-center md:text-right space-y-2">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                      <span className="font-heading font-black text-[#FF9500] text-base truncate">{coach.name}</span>
-                      <button
-                        onClick={() => openCoachModal(coach)}
-                        className="bg-[#FF9500]/10 border border-[#FF9500]/40 text-[#FF9500] hover:bg-[#FF9500] hover:text-black font-semibold text-xs py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all self-center md:self-auto cursor-pointer"
-                      >
-                        <Edit3 className="h-3.5 w-3.5" />
-                        <span>{language === 'ar' ? 'تعديل الملف التعريفي' : 'Edit Showcase Bio'}</span>
-                      </button>
-                    </div>
-
-                    <p className="text-xs text-[#828282] font-semibold">{coach.position || (language === 'ar' ? 'مدرب كاراتيه بالأكاديمية' : 'Karate Coach')}</p>
-                    <p className="text-xs text-emerald-400 font-semibold">{coach.experience || (language === 'ar' ? 'سنوات من الخبرة والتدريب المتميز' : 'Experienced trainer')}</p>
-                    {coach.biography && (
-                      <p className="text-xs text-[#F2F2F2] line-clamp-2 italic leading-relaxed">{coach.biography}</p>
-                    )}
-
-                    {/* Social links */}
-                    <div className="flex items-center justify-center md:justify-start gap-3 pt-2 text-[#828282]">
-                      {coach.facebookUrl && <Facebook className="h-4 w-4 hover:text-[#FF9500] transition-colors" />}
-                      {coach.instagramUrl && <Instagram className="h-4 w-4 hover:text-[#FF9500] transition-colors" />}
-                      <span className="text-[10px] bg-[#0E0E0E] px-2 py-0.5 rounded border border-[#2A2A2A] font-mono text-[#828282]">{coach.phone}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {coaches.length === 0 && (
-                <div className="md:col-span-2 bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl p-12 text-center text-[#828282] font-mono text-sm">
-                  {language === 'ar' ? 'لا يوجد مدربون مسجلون في النظام. من فضلك توجه لقسم إدارة المدربين لإضافتهم أولاً.' : 'No coaches in database. Go to Coaches Management to register coaches first.'}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
       </main>
 
       {/* ===============================================================
@@ -1421,8 +1337,6 @@ export default function AcademyManagement() {
                     language={language}
                   />
                 </div>
-
-
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'رابط فيسبوك (اختياري)' : 'Facebook Profile URL'}</label>
@@ -1620,71 +1534,6 @@ export default function AcademyManagement() {
           </div>
         </div>
       )}
-
-      {/* ===============================================================
-          MODAL: COACH EXTENDED PROFILE
-          =============================================================== */}
-      {coachModal.open && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-xl w-full max-w-lg overflow-hidden shadow-2xl animate-float">
-            <div className="bg-[#0E0E0E] p-4 border-b border-[#2A2A2A] flex justify-between items-center">
-              <h3 className="font-heading font-black text-[#FF9500] uppercase text-sm">
-                {language === 'ar' ? 'تعديل الملف التعريفي والخبرة للمدرب' : 'Edit Coach Biography & Photo'}
-              </h3>
-              <button
-                onClick={() => setCoachModal({ ...coachModal, open: false })}
-                className="text-[#828282] hover:text-[#F2F2F2]"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveCoachProfile} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5 col-span-2">
-                  <ImageUploadField
-                    label={language === 'ar' ? 'صورة المدرب الشخصية' : 'Coach Profile Photo'}
-                    value={coachModal.form.photoUrl || ''}
-                    onChange={(val) => setCoachModal({ ...coachModal, form: { ...coachModal.form, photoUrl: val } })}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'المنصب / اللقب الرياضي' : 'Role / Position'}</label>
-                  <input
-                    type="text"
-                    value={coachModal.form.position || ''}
-                    onChange={(e) => setCoachModal({ ...coachModal, form: { ...coachModal.form, position: e.target.value } })}
-                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    placeholder="مثال: كبير مدربي الكوميتيه"
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'سنوات الخبرة / الشهادات المعتمدة' : 'Experience Summary'}</label>
-                  <input
-                    type="text"
-                    value={coachModal.form.experience || ''}
-                    onChange={(e) => setCoachModal({ ...coachModal, form: { ...coachModal.form, experience: e.target.value } })}
-                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    placeholder="مثال: خبرة 8 سنوات وحزام أسود دان 5"
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'السيرة الذاتية المفصلة والمسيرة الرياضية' : 'Coach Biography'}</label>
-                  <textarea
-                    rows={4}
-                    value={coachModal.form.biography || ''}
-                    onChange={(e) => setCoachModal({ ...coachModal, form: { ...coachModal.form, biography: e.target.value } })}
-                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none focus:border-[#FF9500] text-xs"
-                    placeholder="اكتب نبذة عن مسيرة المدرب الرياضية والبطولات التي شارك بها..."
-                    required
-                  />
-                </div>
-
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'رابط حساب فيسبوك' : 'Facebook Page URL'}</label>
                   <input
