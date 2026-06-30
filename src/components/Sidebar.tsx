@@ -63,7 +63,6 @@ export default function Sidebar() {
     { name: t('players'), path: '/players', icon: Users },
     { name: t('coaches'), path: '/coaches', icon: Trophy },
     { name: t('academyManagement'), path: '/dashboard/academy', icon: Globe },
-    { name: 'محتوى الموقع', path: '/media', icon: Globe },
     { name: t('settings'), path: '/settings', icon: Settings },
   ];
 
