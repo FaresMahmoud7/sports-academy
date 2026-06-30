@@ -559,35 +559,7 @@ export default function AcademyManagement() {
     }
   };
 
-  // Coach extended profile update
-  const openCoachModal = (coach: Coach) => {
-    setCoachModal({
-      open: true,
-      coachId: coach._id,
-      form: {
-        photoUrl: coach.photoUrl || '/logo.jpg',
-        position: coach.position || 'مدرب كاراتيه بالأكاديمية',
-        experience: coach.experience || 'خبرة 5 سنوات',
-        biography: coach.biography || '',
-        facebookUrl: coach.facebookUrl || '',
-        instagramUrl: coach.instagramUrl || '',
-      },
-    });
-  };
 
-  const handleSaveCoachProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!coachModal.coachId) return;
-
-    try {
-      setSaving(true);
-      const res = await fetch(`/api/coaches/${coachModal.coachId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(coachModal.form),
-      });
-
-      if (!res.ok) throw new Error('Failed to save coach profile');
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0E0E0E]">
@@ -1427,6 +1399,7 @@ export default function AcademyManagement() {
                   label={language === 'ar' ? 'صورة كاتب التقييم' : 'Reviewer Photo'}
                   value={testimonialModal.form.profileImageUrl}
                   onChange={(val) => setTestimonialModal({ ...testimonialModal, form: { ...testimonialModal.form, profileImageUrl: val } })}
+                  language={language}
                 />
               </div>
 
@@ -1501,6 +1474,7 @@ export default function AcademyManagement() {
                   label={language === 'ar' ? 'صورة المعرض' : 'Gallery Image'}
                   value={galleryModal.form.imageUrl}
                   onChange={(val) => setGalleryModal({ ...galleryModal, form: { ...galleryModal.form, imageUrl: val } })}
+                  language={language}
                 />
               </div>
 
@@ -1534,47 +1508,7 @@ export default function AcademyManagement() {
           </div>
         </div>
       )}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'رابط حساب فيسبوك' : 'Facebook Page URL'}</label>
-                  <input
-                    type="text"
-                    value={coachModal.form.facebookUrl || ''}
-                    onChange={(e) => setCoachModal({ ...coachModal, form: { ...coachModal.form, facebookUrl: e.target.value } })}
-                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none"
-                  />
-                </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'رابط حساب إنستغرام' : 'Instagram Page URL'}</label>
-                  <input
-                    type="text"
-                    value={coachModal.form.instagramUrl || ''}
-                    onChange={(e) => setCoachModal({ ...coachModal, form: { ...coachModal.form, instagramUrl: e.target.value } })}
-                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-[#2A2A2A]">
-                <button
-                  type="button"
-                  onClick={() => setCoachModal({ ...coachModal, open: false })}
-                  className="px-4 py-2 border border-[#2A2A2A] rounded-lg text-sm text-[#828282] hover:text-[#F2F2F2] cursor-pointer"
-                >
-                  {t('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-4 py-2 bg-[#FF9500] text-black font-semibold rounded-lg text-sm hover:bg-[#F2C94C] cursor-pointer"
-                >
-                  {saving ? t('loading') : t('save')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

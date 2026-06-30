@@ -122,6 +122,17 @@ interface AcademyContent {
     email: string;
     googleMapUrl: string;
   };
+  kickboxing?: {
+    titleAr: string;
+    titleEn: string;
+    descriptionAr: string;
+    descriptionEn: string;
+    coachNameAr: string;
+    coachNameEn: string;
+    coachBioAr: string;
+    coachBioEn: string;
+    imageUrl: string;
+  };
 }
 
 function HomeContent() {
