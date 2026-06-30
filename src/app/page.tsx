@@ -122,6 +122,17 @@ interface AcademyContent {
     email: string;
     googleMapUrl: string;
   };
+  kickboxing?: {
+    titleAr: string;
+    titleEn: string;
+    descriptionAr: string;
+    descriptionEn: string;
+    coachNameAr: string;
+    coachNameEn: string;
+    coachBioAr: string;
+    coachBioEn: string;
+    imageUrl: string;
+  };
 }
 
 function HomeContent() {
@@ -227,6 +238,7 @@ function HomeContent() {
             whyChooseUs: raw.whyChooseUs ?? defaultContent.whyChooseUs,
             statistics: raw.statistics ?? defaultContent.statistics,
             contact: raw.contact ?? defaultContent.contact,
+            kickboxing: raw.kickboxing ?? undefined,
           });
         } else {
           setContent(defaultContent);
@@ -996,6 +1008,150 @@ function HomeContent() {
 
 
 
+
+
+      {/* ===============================================================
+          SECTION 5.5: KICKBOXING & COACH MINA NAGI SECTION
+          =============================================================== */}
+      <section id="kickboxing" className="py-24 bg-gradient-to-b from-[#0E0E0E] via-[#1a0a00] to-[#0E0E0E] border-t border-b border-[#FF9500]/20 relative overflow-hidden">
+        {/* Background glow effects */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#FF9500]/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#FF6B00]/5 rounded-full blur-3xl" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+
+          {/* Section Header */}
+          <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+            <span className="inline-flex items-center gap-2 text-[#FF9500] font-mono text-xs uppercase tracking-widest">
+              <span className="w-8 h-px bg-[#FF9500]" />
+              {language === 'ar' ? 'قسم الكيك بوكسينج' : 'Kickboxing Division'}
+              <span className="w-8 h-px bg-[#FF9500]" />
+            </span>
+            <h2 className="text-4xl sm:text-5xl font-heading font-black uppercase text-gradient-premium tracking-wider pb-2 leading-relaxed">
+              {language === 'ar'
+                ? (content?.kickboxing?.titleAr || 'قسم الكيك بوكسينج الاحترافي')
+                : (content?.kickboxing?.titleEn || 'Professional Kickboxing Division')}
+            </h2>
+            <p className="text-base text-[#F2F2F2]/80 leading-relaxed max-w-2xl mx-auto">
+              {language === 'ar'
+                ? (content?.kickboxing?.descriptionAr || 'انضم إلى أحد أقوى برامج تدريب الكيك بوكسينج المصممة لتعزيز القوة البدنية والرشاقة والتركيز الذهني العميق.')
+                : (content?.kickboxing?.descriptionEn || 'Join one of the most powerful Kickboxing training programs designed to enhance physical strength, agility, and deep mental focus.')}
+            </p>
+          </div>
+
+          {/* Content: Coach Card + Description */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+
+            {/* Left: Coach Profile Card */}
+            <div className="relative">
+              {/* Glowing border frame */}
+              <div className="absolute -inset-1 bg-gradient-to-br from-[#FF9500] via-[#FF6B00] to-transparent rounded-2xl blur opacity-30" />
+              <div className="relative bg-[#1C1B1B] border border-[#FF9500]/30 rounded-2xl overflow-hidden shadow-2xl">
+                {/* Coach Image */}
+                <div className="relative h-80 sm:h-96 overflow-hidden">
+                  {content?.kickboxing?.imageUrl ? (
+                    <img
+                      src={content.kickboxing.imageUrl}
+                      alt={language === 'ar' ? 'المدرب مينا ناجي - كيك بوكسينج' : 'Coach Mina Nagi - Kickboxing'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#FF9500]/20 to-[#1C1B1B] flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-6xl mb-4">🥊</div>
+                        <p className="text-[#828282] text-sm font-mono">{language === 'ar' ? 'صورة المدرب' : 'Coach Photo'}</p>
+                      </div>
+                    </div>
+                  )}
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1C1B1B] via-transparent to-transparent" />
+                  {/* Badge */}
+                  <div className="absolute top-4 right-4 bg-[#FF9500] text-black text-xs font-black uppercase px-3 py-1 rounded-full tracking-wider shadow-lg">
+                    {language === 'ar' ? 'كيك بوكسينج' : 'Kickboxing'}
+                  </div>
+                </div>
+
+                {/* Coach Info */}
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div>
+                      <h3 className="text-xl font-heading font-black text-[#F2F2F2] uppercase">
+                        {language === 'ar'
+                          ? (content?.kickboxing?.coachNameAr || 'الكابتن مينا ناجي')
+                          : (content?.kickboxing?.coachNameEn || 'Captain Mina Nagi')}
+                      </h3>
+                      <p className="text-[#FF9500] text-xs font-mono uppercase tracking-wider mt-1">
+                        {language === 'ar' ? 'مدرب الكيك بوكسينج الاحترافي' : 'Professional Kickboxing Coach'}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#FF9500]/10 border border-[#FF9500]/30 flex items-center justify-center">
+                      <span className="text-lg">🥊</span>
+                    </div>
+                  </div>
+                  {/* Stars */}
+                  <div className="flex gap-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} className="w-4 h-4 text-[#FF9500] fill-current" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Description & Stats */}
+            <div className="space-y-8">
+              {/* Bio */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-[2px] bg-[#FF9500]" />
+                  <span className="text-[#FF9500] text-xs font-mono uppercase tracking-widest">
+                    {language === 'ar' ? 'نبذة عن المدرب' : 'About the Coach'}
+                  </span>
+                </div>
+                <p className="text-[#F2F2F2]/80 leading-relaxed text-sm">
+                  {language === 'ar'
+                    ? (content?.kickboxing?.coachBioAr || 'الكابتن مينا ناجي هو نموذج للالتزام والاحترافية، ويُعتبر على نطاق واسع أحد أبرز المدربين المتخصصين في رياضة الكيك بوكسينج. يتميز بأسلوبه الفريد في التدريب الذي يمزج بين الدعم التحفيزي المطلق والتدريب البدني المكثف.')
+                    : (content?.kickboxing?.coachBioEn || 'Coach Mina Nagi is the epitome of dedication and professionalism, widely recognized as one of the premier instructors in Kickboxing and combat sports. He stands out with his unique teaching methodology that merges absolute motivational support with intense physical training.')}
+                </p>
+              </div>
+
+              {/* Feature Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { icon: '🥊', titleAr: 'تدريب احترافي', titleEn: 'Pro Training', descAr: 'برامج مدروسة لكل المستويات', descEn: 'Structured programs for all levels' },
+                  { icon: '🏆', titleAr: 'مدرب بطولي', titleEn: 'Championship Coach', descAr: 'خبرة في البطولات الرسمية', descEn: 'Experience in official competitions' },
+                  { icon: '💪', titleAr: 'تطوير البدنية', titleEn: 'Physical Development', descAr: 'قوة وسرعة ورشاقة متكاملة', descEn: 'Strength, speed & agility combined' },
+                  { icon: '🛡️', titleAr: 'دفاع عن النفس', titleEn: 'Self Defense', descAr: 'مهارات دفاعية حقيقية وفعالة', descEn: 'Real and effective defensive skills' },
+                ].map((feat, i) => (
+                  <div key={i} className="bg-[#1C1B1B] border border-[#2A2A2A] hover:border-[#FF9500]/40 rounded-xl p-4 transition-all duration-300 group">
+                    <div className="text-2xl mb-2">{feat.icon}</div>
+                    <h4 className="text-[#F2F2F2] font-bold text-sm mb-1 group-hover:text-[#FF9500] transition-colors">
+                      {language === 'ar' ? feat.titleAr : feat.titleEn}
+                    </h4>
+                    <p className="text-[#828282] text-xs leading-relaxed">
+                      {language === 'ar' ? feat.descAr : feat.descEn}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA */}
+              <a
+                href="#contact"
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-[#FF9500] to-[#FF6B00] text-black font-black uppercase text-sm px-6 py-3 rounded-xl hover:scale-105 transition-all duration-300 shadow-lg shadow-[#FF9500]/20"
+              >
+                <span>🥊</span>
+                <span>{language === 'ar' ? 'سجّل الآن في الكيك بوكسينج' : 'Join Kickboxing Now'}</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </section>
 
 
       {/* ===============================================================
