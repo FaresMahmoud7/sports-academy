@@ -121,6 +121,8 @@ interface AcademyContent {
     coachBioAr: string;
     coachBioEn: string;
     imageUrl: string;
+    imageUrl2?: string;
+    imageUrl3?: string;
   };
 }
 
@@ -236,7 +238,7 @@ export default function AcademyManagement() {
     whyChooseUs: [],
     statistics: { championsCount: 0, tournamentsCount: 0, yearsOfExperience: 0, traineesCount: 0 },
     contact: { address: '', phone: '', email: '', googleMapUrl: '' },
-    kickboxing: { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }
+    kickboxing: { titleAr: 'الكيك بوكسينج الاحترافي', titleEn: 'Professional Kickboxing Division', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '', imageUrl2: '', imageUrl3: '' }
   });
 
   // Collections state
@@ -668,13 +670,11 @@ export default function AcademyManagement() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'رابط الصورة / الفيديو للواجهة' : 'Hero Image / Video URL'}</label>
-                  <input
-                    type="text"
+                  <ImageUploadField
+                    label={language === 'ar' ? 'صورة / خلفية الواجهة الرئيسية' : 'Hero Background Image'}
                     value={content.hero.mediaUrl}
-                    onChange={(e) => setContent({ ...content, hero: { ...content.hero, mediaUrl: e.target.value } })}
-                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    required
+                    onChange={(val) => setContent({ ...content, hero: { ...content.hero, mediaUrl: val } })}
+                    language={language}
                   />
                 </div>
 
@@ -888,13 +888,29 @@ export default function AcademyManagement() {
                   />
                 </div>
 
+                {/* Images Section: up to 3 images */}
                 <div className="md:col-span-2">
-                  <ImageUploadField
-                    label={language === 'ar' ? 'صورة قسم الكيك بوكسينج والمدرب' : 'Kickboxing Section Image'}
-                    value={content.kickboxing?.imageUrl || ''}
-                    onChange={(val) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }), imageUrl: val } })}
-                    language={language}
-                  />
+                  <p className="text-xs font-semibold text-[#828282] uppercase mb-3 border-b border-[#2A2A2A] pb-2">{language === 'ar' ? '📷 صور الكيك بوكسينج (حتى 3 صور)' : '📷 Kickboxing Images (up to 3)'}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <ImageUploadField
+                      label={language === 'ar' ? 'الصورة الأولى (المدرب)' : 'Image 1 (Coach)'}
+                      value={content.kickboxing?.imageUrl || ''}
+                      onChange={(val) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '', imageUrl2: '', imageUrl3: '' }), imageUrl: val } })}
+                      language={language}
+                    />
+                    <ImageUploadField
+                      label={language === 'ar' ? 'الصورة الثانية (اختياري)' : 'Image 2 (Optional)'}
+                      value={content.kickboxing?.imageUrl2 || ''}
+                      onChange={(val) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '', imageUrl2: '', imageUrl3: '' }), imageUrl2: val } })}
+                      language={language}
+                    />
+                    <ImageUploadField
+                      label={language === 'ar' ? 'الصورة الثالثة (اختياري)' : 'Image 3 (Optional)'}
+                      value={content.kickboxing?.imageUrl3 || ''}
+                      onChange={(val) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '', imageUrl2: '', imageUrl3: '' }), imageUrl3: val } })}
+                      language={language}
+                    />
+                  </div>
                 </div>
               </div>
 

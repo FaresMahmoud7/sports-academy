@@ -132,6 +132,8 @@ interface AcademyContent {
     coachBioAr: string;
     coachBioEn: string;
     imageUrl: string;
+    imageUrl2?: string;
+    imageUrl3?: string;
   };
 }
 
@@ -1026,12 +1028,12 @@ function HomeContent() {
           <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
             <span className="inline-flex items-center gap-2 text-[#FF9500] font-mono text-xs uppercase tracking-widest">
               <span className="w-8 h-px bg-[#FF9500]" />
-              {language === 'ar' ? 'قسم الكيك بوكسينج' : 'Kickboxing Division'}
+              {language === 'ar' ? 'الكيك بوكسينج' : 'Kickboxing Division'}
               <span className="w-8 h-px bg-[#FF9500]" />
             </span>
             <h2 className="text-4xl sm:text-5xl font-heading font-black uppercase text-gradient-premium tracking-wider pb-2 leading-relaxed">
               {language === 'ar'
-                ? (content?.kickboxing?.titleAr || 'قسم الكيك بوكسينج الاحترافي')
+                ? (content?.kickboxing?.titleAr || 'الكيك بوكسينج الاحترافي')
                 : (content?.kickboxing?.titleEn || 'Professional Kickboxing Division')}
             </h2>
             <p className="text-base text-[#F2F2F2]/80 leading-relaxed max-w-2xl mx-auto">
@@ -1049,26 +1051,46 @@ function HomeContent() {
               {/* Glowing border frame */}
               <div className="absolute -inset-1 bg-gradient-to-br from-[#FF9500] via-[#FF6B00] to-transparent rounded-2xl blur opacity-30" />
               <div className="relative bg-[#1C1B1B] border border-[#FF9500]/30 rounded-2xl overflow-hidden shadow-2xl">
-                {/* Coach Image */}
-                <div className="relative h-80 sm:h-96 overflow-hidden">
+                {/* Coach/Section Images */}
+                <div className={`relative h-80 sm:h-96 overflow-hidden ${content?.kickboxing?.imageUrl2 ? 'grid grid-cols-2 gap-1 bg-[#1C1B1B]' : ''}`}>
                   {content?.kickboxing?.imageUrl ? (
-                    <img
-                      src={content.kickboxing.imageUrl}
-                      alt={language === 'ar' ? 'المدرب مينا ناجي - كيك بوكسينج' : 'Coach Mina Nagi - Kickboxing'}
-                      className="w-full h-full object-cover"
-                    />
+                    <div className="relative w-full h-full col-span-1">
+                      <img
+                        src={content.kickboxing.imageUrl}
+                        alt={language === 'ar' ? 'المدرب مينا ناجي - كيك بوكسينج' : 'Coach Mina Nagi - Kickboxing'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#FF9500]/20 to-[#1C1B1B] flex items-center justify-center">
+                    <div className="w-full h-full bg-gradient-to-br from-[#FF9500]/20 to-[#1C1B1B] flex items-center justify-center col-span-1">
                       <div className="text-center">
                         <div className="text-6xl mb-4">🥊</div>
                         <p className="text-[#828282] text-sm font-mono">{language === 'ar' ? 'صورة المدرب' : 'Coach Photo'}</p>
                       </div>
                     </div>
                   )}
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1C1B1B] via-transparent to-transparent" />
+
+                  {/* Additional Images (2 and 3) */}
+                  {(content?.kickboxing?.imageUrl2 || content?.kickboxing?.imageUrl3) && (
+                    <div className="relative w-full h-full col-span-1 grid grid-rows-2 gap-1">
+                      {content?.kickboxing?.imageUrl2 && (
+                        <div className={`relative w-full h-full ${content?.kickboxing?.imageUrl3 ? 'row-span-1' : 'row-span-2'}`}>
+                          <img src={content.kickboxing.imageUrl2} alt="Kickboxing 2" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      {content?.kickboxing?.imageUrl3 && (
+                        <div className="relative w-full h-full row-span-1">
+                          <img src={content.kickboxing.imageUrl3} alt="Kickboxing 3" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Gradient overlay (placed over the whole grid) */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1C1B1B] via-transparent to-transparent pointer-events-none" />
+                  
                   {/* Badge */}
-                  <div className="absolute top-4 right-4 bg-[#FF9500] text-black text-xs font-black uppercase px-3 py-1 rounded-full tracking-wider shadow-lg">
+                  <div className="absolute top-4 right-4 bg-[#FF9500] text-black text-xs font-black uppercase px-3 py-1 rounded-full tracking-wider shadow-lg z-10">
                     {language === 'ar' ? 'كيك بوكسينج' : 'Kickboxing'}
                   </div>
                 </div>
