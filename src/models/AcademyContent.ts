@@ -34,6 +34,17 @@ export interface IAcademyContent extends Document {
     email: string;
     googleMapUrl: string;
   };
+  kickboxing?: {
+    titleAr: string;
+    titleEn: string;
+    descriptionAr: string;
+    descriptionEn: string;
+    coachNameAr: string;
+    coachNameEn: string;
+    coachBioAr: string;
+    coachBioEn: string;
+    imageUrl: string;
+  };
 }
 
 const AcademyContentSchema = new Schema<IAcademyContent>(
@@ -87,6 +98,17 @@ const AcademyContentSchema = new Schema<IAcademyContent>(
       phone: { type: String, default: '+20 123 456 7890' },
       email: { type: String, default: 'info@championsacademy.com' },
       googleMapUrl: { type: String, default: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3451.17112002341!2d31.336495!3d30.089274!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14583e18a8b1cb37%3A0xe54d8fb8dd8df42e!2sHeliopolis%20Club!5e0!3m2!1sen!2seg!4v1700000000000!5m2!1sen!2seg' },
+    },
+    kickboxing: {
+      titleAr: { type: String, default: 'قسم الكيك بوكسينج الاحترافي' },
+      titleEn: { type: String, default: 'Professional Kickboxing Division' },
+      descriptionAr: { type: String, default: 'انضم إلى أحد أقوى البرامج التدريبية في الكيك بوكسينج المصمم خصيصًا لتطوير القوة البدنية، والسرعة، والتركيز الذهني العالي. ندمج بين أحدث أساليب التدريب الرياضي والممارسات القتالية لضمان تحقيق أعلى درجات اللياقة والدفاع عن النفس في بيئة حماسية وآمنة تماماً.' },
+      descriptionEn: { type: String, default: 'Join one of the most powerful Kickboxing training programs designed to enhance physical strength, agility, and deep mental focus. We blend modern athletic training with actual combat drills to guarantee top-tier fitness and self-defense capabilities in an exciting, safe environment.' },
+      coachNameAr: { type: String, default: 'الكابتن مينا ناجي' },
+      coachNameEn: { type: String, default: 'Coach Mina Nagi' },
+      coachBioAr: { type: String, default: 'الكابتن مينا ناجي هو رمز التفاني والاحترافية، ويُعتبر أحد أفضل مدربي الكيك بوكسينج والرياضات القتالية. يتميز بأسلوبه التدريبي الفريد الذي يجمع بين الدعم المعنوي والتركيز البدني المكثف، مما يُمكّن المتدربين من تخطي حدود قدراتهم وتحقيق تحول حقيقي في اللياقة البدنية والمهارات الدفاعية. بفضل شغفه ورؤيته، استطاع كابتن مينا بناء مجتمع رياضي حماسي يلهم الجميع للوصول إلى منصات التتويج والتميز.' },
+      coachBioEn: { type: String, default: 'Coach Mina Nagi is the epitome of dedication and professionalism, widely recognized as one of the premier instructors in Kickboxing and combat sports. He stands out with his unique teaching methodology that merges absolute motivational support with intense physical training, empowering trainees to exceed their limits and achieve remarkable fitness and self-defense transformations. Through his passion and vision, Captain Mina has built an inspiring community where everyone thrives to achieve championship levels.' },
+      imageUrl: { type: String, default: '/logo.jpg' },
     },
   },
   { timestamps: true }

@@ -111,11 +111,128 @@ interface AcademyContent {
     email: string;
     googleMapUrl: string;
   };
+  kickboxing?: {
+    titleAr: string;
+    titleEn: string;
+    descriptionAr: string;
+    descriptionEn: string;
+    coachNameAr: string;
+    coachNameEn: string;
+    coachBioAr: string;
+    coachBioEn: string;
+    imageUrl: string;
+  };
 }
+
+const ImageUploadField = ({
+  label,
+  value,
+  onChange,
+  language
+}: {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  language: string;
+}) => {
+  const [fileLoading, setFileLoading] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileLoading(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const MAX_SIZE = 800;
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height = Math.round((height * MAX_SIZE) / width);
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width = Math.round((width * MAX_SIZE) / height);
+            height = MAX_SIZE;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          onChange(dataUrl);
+        }
+        setFileLoading(false);
+      };
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      <label className="text-xs font-semibold text-[#828282] uppercase">{label}</label>
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3">
+        {value ? (
+          <div className="relative w-20 h-20 rounded-md border border-[#2A2A2A] overflow-hidden flex-shrink-0 bg-black">
+            <img src={value} alt="Preview" className="w-full h-full object-contain" />
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="absolute top-0 right-0 bg-red-600 hover:bg-red-700 text-white rounded-bl p-1 text-xs"
+              title="Remove"
+            >
+              &times;
+            </button>
+          </div>
+        ) : (
+          <div className="w-20 h-20 rounded-md border border-dashed border-[#444] flex items-center justify-center text-xs text-[#828282] flex-shrink-0 bg-black/20">
+            {language === 'ar' ? 'لا توجد صورة' : 'No Image'}
+          </div>
+        )}
+        <div className="flex-1 w-full space-y-2">
+          <div className="relative">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+              id={`image-upload-${label.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase()}`}
+            />
+            <label
+              htmlFor={`image-upload-${label.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase()}`}
+              className="cursor-pointer inline-flex items-center justify-center w-full px-4 py-2 bg-[#FF9500] hover:bg-[#D90000] text-black hover:text-white text-xs font-bold rounded-lg transition-all duration-300"
+            >
+              {fileLoading
+                ? (language === 'ar' ? 'جاري التحميل...' : 'Uploading...')
+                : (language === 'ar' ? 'اختر صورة من جهازك' : 'Choose image from device')}
+            </label>
+          </div>
+          <div className="text-[10px] text-[#828282] text-center sm:text-left">
+            {language === 'ar' ? 'أو أدخل رابط الصورة مباشرة بالأسفل:' : 'Or enter image URL directly below:'}
+          </div>
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full bg-[#0E0E0E] border border-[#2A2A2A] rounded p-2 text-xs text-[#F2F2F2] outline-none focus:border-[#FF9500]"
+            placeholder={language === 'ar' ? 'أدخل رابط الصورة...' : 'Enter image URL...'}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function AcademyManagement() {
   const { t, isRtl, language } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'hero_about' | 'why_stats_contact' | 'champions' | 'testimonials' | 'gallery' | 'coaches'>('hero_about');
+  const [activeTab, setActiveTab] = useState<'hero_about' | 'kickboxing' | 'why_stats_contact' | 'champions' | 'testimonials' | 'gallery' | 'coaches'>('hero_about');
 
   // Loading and alerts
   const [loading, setLoading] = useState(true);
@@ -129,6 +246,7 @@ export default function AcademyManagement() {
     whyChooseUs: [],
     statistics: { championsCount: 0, tournamentsCount: 0, yearsOfExperience: 0, traineesCount: 0 },
     contact: { address: '', phone: '', email: '', googleMapUrl: '' },
+    kickboxing: { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }
   });
 
   // Collections state
@@ -167,6 +285,19 @@ export default function AcademyManagement() {
         const contentRes = await fetch('/api/academy/content');
         if (contentRes.ok) {
           const contentData = await contentRes.json();
+          if (!contentData.kickboxing) {
+            contentData.kickboxing = {
+              titleAr: 'قسم الكيك بوكسينج الاحترافي',
+              titleEn: 'Professional Kickboxing Division',
+              descriptionAr: 'انضم إلى أحد أقوى البرامج التدريبية في الكيك بوكسينج المصمم خصيصًا لتطوير القوة البدنية، والسرعة، والتركيز الذهني العالي. ندمج بين أحدث أساليب التدريب الرياضي والممارسات القتالية لضمان تحقيق أعلى درجات اللياقة والدفاع عن النفس في بيئة حماسية وآمنة تماماً.',
+              descriptionEn: 'Join one of the most powerful Kickboxing training programs designed to enhance physical strength, agility, and deep mental focus. We blend modern athletic training with actual combat drills to guarantee top-tier fitness and self-defense capabilities in an exciting, safe environment.',
+              coachNameAr: 'الكابتن مينا ناجي',
+              coachNameEn: 'Coach Mina Nagi',
+              coachBioAr: 'الكابتن مينا ناجي هو رمز التفاني والاحترافية، ويُعتبر أحد أفضل مدربي الكيك بوكسينج والرياضات القتالية. يتميز بأسلوبه التدريبي الفريد الذي يجمع بين الدعم المعنوي والتركيز البدني المكثف، مما يُمكّن المتدربين من تخطي حدود قدراتهم وتحقيق تحول حقيقي في اللياقة البدنية والمهارات الدفاعية. بفضل شغفه ورؤيته، استطاع كابتن مينا بناء مجتمع رياضي حماسي يلهم الجميع للوصول إلى منصات التتويج والتميز.',
+              coachBioEn: 'Coach Mina Nagi is the epitome of dedication and professionalism, widely recognized as one of the premier instructors in Kickboxing and combat sports. He stands out with his unique teaching methodology that merges absolute motivational support with intense physical training, empowering trainees to exceed their limits and achieve remarkable fitness and self-defense transformations. Through his passion and vision, Captain Mina has built an inspiring community where everyone thrives to achieve championship levels.',
+              imageUrl: '/logo.jpg'
+            };
+          }
           setContent(contentData);
         }
 
@@ -492,10 +623,10 @@ export default function AcademyManagement() {
 
   const tabs = [
     { id: 'hero_about', name: language === 'ar' ? 'الرئيسية ومين نحن' : 'Hero & About Us', icon: Globe },
+    { id: 'kickboxing', name: language === 'ar' ? 'قسم الكيك بوكسينج' : 'Kickboxing Section', icon: Award },
     { id: 'why_stats_contact', name: language === 'ar' ? 'المميزات والتواصل' : 'Why Us & Contact', icon: Shield },
     { id: 'champions', name: language === 'ar' ? 'إدارة الأبطال' : 'Our Champions', icon: Trophy },
     { id: 'coaches', name: language === 'ar' ? 'الملفات التعريفية للمدربين' : 'Coaches Profiles', icon: UserCheck },
-
     { id: 'gallery', name: language === 'ar' ? 'إنجازاتنا' : 'Achievements', icon: ImageIcon },
   ] as const;
 
@@ -632,14 +763,12 @@ export default function AcademyManagement() {
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex flex-col gap-2 md:col-span-2">
-                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'رابط صورة قسم من نحن' : 'About Us Image URL'}</label>
-                  <input
-                    type="text"
-                    value={content.about.imageUrl}
-                    onChange={(e) => setContent({ ...content, about: { ...content.about, imageUrl: e.target.value } })}
-                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    required
+                <div className="md:col-span-2">
+                  <ImageUploadField
+                    label={language === 'ar' ? 'صورة قسم من نحن' : 'About Us Image'}
+                    value={content.about.imageUrl || ''}
+                    onChange={(val) => setContent({ ...content, about: { ...content.about, imageUrl: val } })}
+                    language={language}
                   />
                 </div>
 
@@ -710,6 +839,126 @@ export default function AcademyManagement() {
                 <Save className="h-5 w-5" />
                 <span>{saving ? t('loading') : t('save')}</span>
               </button>
+            </div>
+          </form>
+        )}
+
+        {/* ===============================================================
+            TAB 1.5: KICKBOXING & COACH MINA NAGI
+            =============================================================== */}
+        {activeTab === 'kickboxing' && (
+          <form onSubmit={handleSaveContent} className="space-y-6">
+            <div className="glass-card-premium rounded-xl border border-[#2A2A2A] p-6 shadow-glow-orange animate-float">
+              <h2 className="text-lg md:text-xl font-heading font-black text-[#FF9500] border-b border-[#2A2A2A] pb-3 mb-6 uppercase flex items-center gap-2">
+                <Award className="h-5 w-5 text-[#F2C94C]" />
+                {language === 'ar' ? 'تفاصيل قسم الكيك بوكسينج والمدرب مينا ناجي' : 'Kickboxing Section & Coach Mina Nagi Details'}
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'العنوان بالعربية' : 'Title (Arabic)'}</label>
+                  <input
+                    type="text"
+                    value={content.kickboxing?.titleAr || ''}
+                    onChange={(e) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }), titleAr: e.target.value } })}
+                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'العنوان بالإنجليزية' : 'Title (English)'}</label>
+                  <input
+                    type="text"
+                    value={content.kickboxing?.titleEn || ''}
+                    onChange={(e) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }), titleEn: e.target.value } })}
+                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'اسم المدرب بالعربية' : 'Coach Name (Arabic)'}</label>
+                  <input
+                    type="text"
+                    value={content.kickboxing?.coachNameAr || ''}
+                    onChange={(e) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }), coachNameAr: e.target.value } })}
+                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'اسم المدرب بالإنجليزية' : 'Coach Name (English)'}</label>
+                  <input
+                    type="text"
+                    value={content.kickboxing?.coachNameEn || ''}
+                    onChange={(e) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }), coachNameEn: e.target.value } })}
+                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 md:col-span-2">
+                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'الوصف بالعربية' : 'Description (Arabic)'}</label>
+                  <textarea
+                    value={content.kickboxing?.descriptionAr || ''}
+                    onChange={(e) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }), descriptionAr: e.target.value } })}
+                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500] min-h-[100px]"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 md:col-span-2">
+                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'الوصف بالإنجليزية' : 'Description (English)'}</label>
+                  <textarea
+                    value={content.kickboxing?.descriptionEn || ''}
+                    onChange={(e) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }), descriptionEn: e.target.value } })}
+                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500] min-h-[100px]"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 md:col-span-2">
+                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'نبذة عن المدرب ومدحه بالعربية' : 'Coach Biography & Praise (Arabic)'}</label>
+                  <textarea
+                    value={content.kickboxing?.coachBioAr || ''}
+                    onChange={(e) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }), coachBioAr: e.target.value } })}
+                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500] min-h-[120px]"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 md:col-span-2">
+                  <label className="text-xs font-semibold text-[#828282] uppercase">{language === 'ar' ? 'نبذة عن المدرب ومدحه بالإنجليزية' : 'Coach Biography & Praise (English)'}</label>
+                  <textarea
+                    value={content.kickboxing?.coachBioEn || ''}
+                    onChange={(e) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }), coachBioEn: e.target.value } })}
+                    className="bg-[#1C1B1B] border border-[#2A2A2A] rounded-lg p-3 text-[#F2F2F2] outline-none focus:border-[#FF9500] min-h-[120px]"
+                    required
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <ImageUploadField
+                    label={language === 'ar' ? 'صورة قسم الكيك بوكسينج والمدرب' : 'Kickboxing Section Image'}
+                    value={content.kickboxing?.imageUrl || ''}
+                    onChange={(val) => setContent({ ...content, kickboxing: { ...(content.kickboxing || { titleAr: '', titleEn: '', descriptionAr: '', descriptionEn: '', coachNameAr: '', coachNameEn: '', coachBioAr: '', coachBioEn: '', imageUrl: '' }), imageUrl: val } })}
+                    language={language}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="bg-[#FF9500] text-black font-extrabold uppercase tracking-wider px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-[#F2C94C] transition-all disabled:opacity-50 cursor-pointer shadow-glow-orange"
+                >
+                  <Save className="h-5 w-5" />
+                  <span>{saving ? t('loading') : t('save')}</span>
+                </button>
+              </div>
             </div>
           </form>
         )}
@@ -1164,14 +1413,12 @@ export default function AcademyManagement() {
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'رابط الصورة الشخصية للبطل' : 'Champion Image URL'}</label>
-                  <input
-                    type="text"
-                    value={championModal.form.photoUrl}
-                    onChange={(e) => setChampionModal({ ...championModal, form: { ...championModal.form, photoUrl: e.target.value } })}
-                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    required
+                <div className="col-span-2">
+                  <ImageUploadField
+                    label={language === 'ar' ? 'الصورة الشخصية للبطل' : 'Champion Image'}
+                    value={championModal.form.photoUrl || ''}
+                    onChange={(val) => setChampionModal({ ...championModal, form: { ...championModal.form, photoUrl: val } })}
+                    language={language}
                   />
                 </div>
 
@@ -1262,13 +1509,10 @@ export default function AcademyManagement() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'رابط الصورة الشخصية لكاتب التقييم' : 'Reviewer Photo URL'}</label>
-                <input
-                  type="text"
+                <ImageUploadField
+                  label={language === 'ar' ? 'صورة كاتب التقييم' : 'Reviewer Photo'}
                   value={testimonialModal.form.profileImageUrl}
-                  onChange={(e) => setTestimonialModal({ ...testimonialModal, form: { ...testimonialModal.form, profileImageUrl: e.target.value } })}
-                  className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                  required
+                  onChange={(val) => setTestimonialModal({ ...testimonialModal, form: { ...testimonialModal.form, profileImageUrl: val } })}
                 />
               </div>
 
@@ -1339,13 +1583,10 @@ export default function AcademyManagement() {
 
             <form onSubmit={handleSaveGalleryItem} className="p-6 space-y-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'رابط ملف الصورة' : 'Image URL'}</label>
-                <input
-                  type="text"
+                <ImageUploadField
+                  label={language === 'ar' ? 'صورة المعرض' : 'Gallery Image'}
                   value={galleryModal.form.imageUrl}
-                  onChange={(e) => setGalleryModal({ ...galleryModal, form: { ...galleryModal.form, imageUrl: e.target.value } })}
-                  className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                  required
+                  onChange={(val) => setGalleryModal({ ...galleryModal, form: { ...galleryModal.form, imageUrl: val } })}
                 />
               </div>
 
@@ -1401,13 +1642,10 @@ export default function AcademyManagement() {
             <form onSubmit={handleSaveCoachProfile} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[10px] font-semibold text-[#828282] uppercase">{language === 'ar' ? 'رابط الصورة الشخصية للمدرب' : 'Coach Photo URL'}</label>
-                  <input
-                    type="text"
+                  <ImageUploadField
+                    label={language === 'ar' ? 'صورة المدرب الشخصية' : 'Coach Profile Photo'}
                     value={coachModal.form.photoUrl || ''}
-                    onChange={(e) => setCoachModal({ ...coachModal, form: { ...coachModal.form, photoUrl: e.target.value } })}
-                    className="bg-[#0E0E0E] border border-[#2A2A2A] rounded-lg p-2.5 text-[#F2F2F2] outline-none focus:border-[#FF9500]"
-                    required
+                    onChange={(val) => setCoachModal({ ...coachModal, form: { ...coachModal.form, photoUrl: val } })}
                   />
                 </div>
 
