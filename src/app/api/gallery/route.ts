@@ -3,6 +3,8 @@ import dbConnect from '@/lib/db';
 import GalleryItem from '@/models/GalleryItem';
 import { verifyAuth } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET all gallery items (public)
 export async function GET() {
   try {

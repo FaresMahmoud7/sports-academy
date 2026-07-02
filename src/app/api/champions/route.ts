@@ -3,6 +3,8 @@ import dbConnect from '@/lib/db';
 import Champion from '@/models/Champion';
 import { verifyAuth } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET all champions (public)
 export async function GET() {
   try {

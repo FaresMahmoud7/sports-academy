@@ -223,7 +223,7 @@ function HomeContent() {
       try {
         setLoading(true);
         // Singleton content
-        const contentRes = await fetch('/api/academy/content');
+        const contentRes = await fetch('/api/academy/content', { cache: 'no-store' });
         const defaultContent = {
           hero: { title: 'أكاديمية الأبطال', subtitle: 'مصنع الأبطال', ctaText: 'انضم إلينا', ctaLink: '#contact', mediaUrl: '/logo.jpg' },
           about: { introduction: '', vision: '', mission: '', story: '', imageUrl: '/ابطالنا/احمد سالم.jpeg', imageFit: 'contain' },
@@ -248,19 +248,19 @@ function HomeContent() {
 
 
         // Champions - fetch from new DB route
-        const championsRes = await fetch('/api/champions');
+        const championsRes = await fetch('/api/champions', { cache: 'no-store' });
         if (championsRes.ok) {
           setChampions(await championsRes.json());
         }
 
         // Testimonials
-        const testimonialsRes = await fetch('/api/academy/testimonials');
+        const testimonialsRes = await fetch('/api/academy/testimonials', { cache: 'no-store' });
         if (testimonialsRes.ok) {
           setTestimonials(await testimonialsRes.json());
         }
 
         // Gallery - fetch from new DB route
-        const galleryRes = await fetch('/api/gallery');
+        const galleryRes = await fetch('/api/gallery', { cache: 'no-store' });
         if (galleryRes.ok) {
           const dbGallery = await galleryRes.json();
           if (dbGallery.length > 0) {
@@ -269,13 +269,13 @@ function HomeContent() {
         }
 
         // Coaches (GET is now public!)
-        const coachesRes = await fetch('/api/coaches');
+        const coachesRes = await fetch('/api/coaches', { cache: 'no-store' });
         if (coachesRes.ok) {
           setCoaches(await coachesRes.json());
         }
 
         // Documents
-        const docsRes = await fetch('/api/documents');
+        const docsRes = await fetch('/api/documents', { cache: 'no-store' });
         if (docsRes.ok) {
           setDocuments(await docsRes.json());
         }
