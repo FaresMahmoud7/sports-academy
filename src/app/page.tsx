@@ -654,7 +654,7 @@ function HomeContent() {
               <div className="relative h-36 w-36 sm:h-44 sm:w-44 rounded-2xl border-2 border-[#FF9500] overflow-hidden shadow-glow-orange-lg flex-shrink-0 hover:scale-105 transition-transform duration-500">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/founder.jpg"
+                  src={safeContent.hero.mediaUrl || '/founder.jpg'}
                   alt="Captain Ahmed Salem Gamal"
                   className="h-full w-full object-cover"
                 />
