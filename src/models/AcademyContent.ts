@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IAcademyContent extends Document {
   key: string;
+  logoUrl?: string;
   hero: {
     title: string;
     subtitle: string;
@@ -52,12 +53,13 @@ export interface IAcademyContent extends Document {
 const AcademyContentSchema = new Schema<IAcademyContent>(
   {
     key: { type: String, default: 'academy_data', unique: true },
+    logoUrl: { type: String, default: '/logo.jpg' },
     hero: {
       title: { type: String, default: 'أكاديمية الأبطال للكاراتيه' },
       subtitle: { type: String, default: 'مصنع الأبطال' },
       ctaText: { type: String, default: 'انضم إلينا الآن' },
       ctaLink: { type: String, default: '#contact' },
-      mediaUrl: { type: String, default: '/logo.jpg' },
+      mediaUrl: { type: String, default: '/founder.jpg' },
     },
     about: {
       introduction: { type: String, default: 'نحن أكاديمية متخصصة في تدريب رياضة الكاراتيه والدفاع عن النفس، نهدف لتطوير المهارات البدنية والعقلية للأبطال.' },

@@ -14,6 +14,14 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [logoUrl, setLogoUrl] = useState('/logo.jpg');
+
+  React.useEffect(() => {
+    fetch('/api/academy/content')
+      .then(res => res.json())
+      .then(data => { if (data.logoUrl) setLogoUrl(data.logoUrl); })
+      .catch(err => console.error('Failed to fetch logo', err));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +62,7 @@ export default function Login() {
           <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-[#FF9500] shadow-glow-orange-lg mb-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo.jpg"
+              src={logoUrl}
               alt="Champions Academy"
               className="h-full w-full object-cover"
             />

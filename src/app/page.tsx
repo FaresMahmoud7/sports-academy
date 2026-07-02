@@ -90,6 +90,7 @@ interface DocumentItem {
 }
 
 interface AcademyContent {
+  logoUrl?: string;
   hero: {
     title: string;
     subtitle: string;
@@ -149,9 +150,9 @@ function HomeContent() {
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState<AcademyContent | null>(null);
 
-  // Safe content with defaults to prevent undefined crashes
   const safeContent: AcademyContent = content ?? {
-    hero: { title: 'أكاديمية الأبطال', subtitle: 'مصنع الأبطال', ctaText: 'انضم إلينا', ctaLink: '#contact', mediaUrl: '/logo.jpg' },
+    logoUrl: '/logo.jpg',
+    hero: { title: 'أكاديمية الأبطال', subtitle: 'مصنع الأبطال', ctaText: 'انضم إلينا', ctaLink: '#contact', mediaUrl: '/founder.jpg' },
     about: { introduction: '', vision: '', mission: '', story: '', imageUrl: '/ابطالنا/احمد سالم.jpeg', imageFit: 'contain' },
     whyChooseUs: [],
     statistics: { championsCount: 0, tournamentsCount: 0, yearsOfExperience: 0, traineesCount: 0 },
@@ -225,7 +226,8 @@ function HomeContent() {
         // Singleton content
         const contentRes = await fetch('/api/academy/content', { cache: 'no-store' });
         const defaultContent = {
-          hero: { title: 'أكاديمية الأبطال', subtitle: 'مصنع الأبطال', ctaText: 'انضم إلينا', ctaLink: '#contact', mediaUrl: '/logo.jpg' },
+          logoUrl: '/logo.jpg',
+          hero: { title: 'أكاديمية الأبطال', subtitle: 'مصنع الأبطال', ctaText: 'انضم إلينا', ctaLink: '#contact', mediaUrl: '/founder.jpg' },
           about: { introduction: '', vision: '', mission: '', story: '', imageUrl: '/ابطالنا/احمد سالم.jpeg', imageFit: 'contain' },
           whyChooseUs: [],
           statistics: { championsCount: 0, tournamentsCount: 0, yearsOfExperience: 0, traineesCount: 0 },
@@ -235,6 +237,7 @@ function HomeContent() {
           const raw = await contentRes.json();
           // Merge with defaults in case DB doc is missing nested fields
           setContent({
+            logoUrl: raw.logoUrl ?? defaultContent.logoUrl,
             hero: raw.hero ?? defaultContent.hero,
             about: raw.about ?? defaultContent.about,
             whyChooseUs: raw.whyChooseUs ?? defaultContent.whyChooseUs,
@@ -425,7 +428,7 @@ function HomeContent() {
           <Link href="#home" className="flex items-center gap-3 group">
             <div className="h-11 w-11 rounded-lg border border-[#FF9500] overflow-hidden shadow-glow-orange group-hover:scale-105 transition-all">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.jpg" alt="Champions Academy Logo" className="h-full w-full object-cover" />
+              <img src={safeContent.logoUrl || "/logo.jpg"} alt="Champions Academy Logo" className="h-full w-full object-cover" />
             </div>
             <div>
               <h1 className="font-heading font-black text-sm md:text-base tracking-wider text-[#FF9500] leading-none">
@@ -533,7 +536,7 @@ function HomeContent() {
             <div className="mt-8 flex items-center gap-3 border-b border-[#2A2A2A] pb-4 mb-6">
               <div className="h-9 w-9 overflow-hidden rounded-md border border-[#FF9500]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
+                <img src={safeContent.logoUrl || "/logo.jpg"} alt="Logo" className="h-full w-full object-cover" />
               </div>
               <span className="font-heading font-black text-[#FF9500] text-sm uppercase">Champions Academy</span>
             </div>
@@ -1382,7 +1385,7 @@ function HomeContent() {
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-md border border-[#FF9500] overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
+                <img src={safeContent.logoUrl || "/logo.jpg"} alt="Logo" className="h-full w-full object-cover" />
               </div>
               <span className="font-heading font-black text-sm uppercase text-[#FF9500]">Champions Academy</span>
             </div>
@@ -1458,7 +1461,7 @@ function HomeContent() {
               <div className="flex flex-col items-center text-center space-y-2 mb-4">
                 <div className="h-16 w-16 overflow-hidden rounded-xl border border-[#FF9500] shadow-glow-orange-lg">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
+                  <img src={safeContent.logoUrl || "/logo.jpg"} alt="Logo" className="h-full w-full object-cover" />
                 </div>
                 <div>
                   <h4 className="font-heading font-black text-xs text-[#FF9500]">Champions Academy</h4>

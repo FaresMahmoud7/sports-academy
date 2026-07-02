@@ -41,21 +41,30 @@ export default function Sidebar() {
     document.documentElement.setAttribute('data-theme', nextTheme);
   };
 
+  const [logoUrl, setLogoUrl] = useState('/logo.jpg');
+
   useEffect(() => {
-    async function fetchMe() {
+    async function fetchSidebarData() {
       try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.username) {
-            setAdminUsername(data.username);
-          }
+        const [authRes, contentRes] = await Promise.all([
+          fetch('/api/auth/me'),
+          fetch('/api/academy/content', { cache: 'no-store' })
+        ]);
+        
+        if (authRes.ok) {
+          const authData = await authRes.json();
+          if (authData.username) setAdminUsername(authData.username);
+        }
+        
+        if (contentRes.ok) {
+          const contentData = await contentRes.json();
+          if (contentData.logoUrl) setLogoUrl(contentData.logoUrl);
         }
       } catch (err) {
-        console.error('Failed to fetch admin info:', err);
+        console.error('Failed to fetch sidebar data:', err);
       }
     }
-    fetchMe();
+    fetchSidebarData();
   }, []);
 
   const menuItems = [
@@ -90,7 +99,7 @@ export default function Sidebar() {
           <div className="relative h-12 w-12 overflow-hidden rounded-md border border-[#FF9500] shadow-glow-orange flex-shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo.jpg"
+              src={logoUrl}
               alt="Champions Academy Logo"
               className="h-full w-full object-cover"
             />
@@ -186,7 +195,7 @@ export default function Sidebar() {
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 overflow-hidden rounded border border-[#FF9500]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
+            <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
           </div>
           <span className="font-heading font-extrabold text-[#FF9500] text-sm uppercase">
             {language === 'ar' ? 'أكاديمية الأبطال' : 'Champions Academy'}

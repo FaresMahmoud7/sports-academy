@@ -79,6 +79,7 @@ interface Coach {
 }
 
 interface AcademyContent {
+  logoUrl?: string;
   hero: {
     title: string;
     subtitle: string;
@@ -231,8 +232,8 @@ export default function AcademyManagement() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  // Core content state
   const [content, setContent] = useState<AcademyContent>({
+    logoUrl: '/logo.jpg',
     hero: { title: '', subtitle: '', ctaText: '', ctaLink: '', mediaUrl: '' },
     about: { introduction: '', vision: '', mission: '', story: '', imageUrl: '/ابطالنا/احمد سالم.jpeg', imageFit: 'contain' as 'cover' | 'contain' },
     whyChooseUs: [],
@@ -674,6 +675,15 @@ export default function AcademyManagement() {
                     label={language === 'ar' ? 'صورة / خلفية الواجهة الرئيسية' : 'Hero Background Image'}
                     value={content.hero.mediaUrl}
                     onChange={(val) => setContent({ ...content, hero: { ...content.hero, mediaUrl: val } })}
+                    language={language}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <ImageUploadField
+                    label={language === 'ar' ? 'شعار الأكاديمية (اللوجو)' : 'Academy Logo'}
+                    value={content.logoUrl || ''}
+                    onChange={(val) => setContent({ ...content, logoUrl: val })}
                     language={language}
                   />
                 </div>
