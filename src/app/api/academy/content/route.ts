@@ -30,15 +30,37 @@ export async function PUT(request: Request) {
     await dbConnect();
     const body = await request.json();
 
+    // Flatten nested object into dot-notation so $set updates individual paths
+    // e.g. { about: { imageUrl: '...' } } => { 'about.imageUrl': '...' }
+    function flattenObject(obj: Record<string, any>, prefix = ''): Record<string, any> {
+      return Object.keys(obj).reduce((acc: Record<string, any>, key) => {
+        const fullKey = prefix ? `${prefix}.${key}` : key;
+        const val = obj[key];
+        if (
+          val !== null &&
+          typeof val === 'object' &&
+          !Array.isArray(val) &&
+          !(val instanceof Date)
+        ) {
+          Object.assign(acc, flattenObject(val, fullKey));
+        } else {
+          acc[fullKey] = val;
+        }
+        return acc;
+      }, {});
+    }
+
+    const flatBody = flattenObject(body);
+
     const updatedContent = await AcademyContent.findOneAndUpdate(
       { key: 'academy_data' },
-      { $set: body },
-      { new: true, upsert: true, runValidators: true }
+      { $set: flatBody },
+      { new: true, upsert: true, runValidators: false, strict: false }
     );
 
     return NextResponse.json(updatedContent);
   } catch (error: any) {
-    console.error('Error updating academy content:', error);
+    console.error('Error updating academy content:', error?.message, error?.stack);
     return NextResponse.json(
       { error: error.message || 'Internal Server Error' },
       { status: 500 }

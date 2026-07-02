@@ -151,7 +151,7 @@ const ImageUploadField = ({
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const MAX_SIZE = 800;
+        const MAX_SIZE = 600; // Reduced to keep Base64 well under MongoDB 16MB doc limit
         if (width > height) {
           if (width > MAX_SIZE) {
             height = Math.round((height * MAX_SIZE) / width);
@@ -168,7 +168,7 @@ const ImageUploadField = ({
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // quality 0.6 to reduce size
           onChange(dataUrl);
         }
         setFileLoading(false);
